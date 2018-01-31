@@ -1,72 +1,66 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿public class Block
+{
 
-public class Block {
+    public static int DEFAULT_ID = 0;
 
-	public static int DEFAULT_ID = 0;
+    public BlockDef Definition { get; set; }
+    public Chunk Chunk { get; private set; }
+    private Position position;
 
-	private BlockDef definition;
-	private Position position;
-	private Chunk chunk;
+    public int ID
+    {
+        get
+        {
+            return Definition.Id;
+        }
+    }
 
-	public int ID {
-		get {
-			return this.definition.ID;
-		}
-		set {
-			this.definition = BlockDefManager.getBlockDef(value);
-		}
-	}
+    /// <summary>
+    /// Coordonée locale du bloc sur l'axe X (0 à 15).
+    /// </summary>
+    public int X
+    {
+        get
+        {
+            return position.X;
+        }
+    }
 
-	public BlockDef Definition {
-		get {
-			return this.definition;
-		}
-		set {
-			this.definition = value;
-		}
-	}
+    /// <summary>
+    /// Coordonée locale du bloc sur l'axe Y (0 à 15).
+    /// </summary>
+    public int Y
+    {
+        get
+        {
+            return position.Y;
+        }
+    }
 
-	public int X {
-		get {
-			return this.position.x;
-		}
-	}
+    /// <summary>
+    /// Coordonée locale du bloc sur l'axe Z (0 à 15).
+    /// </summary>
+    public int Z
+    {
+        get
+        {
+            return position.Z;
+        }
+    }
 
-	public int Y {
-		get {
-			return this.position.y;
-		}
-	}
+    public Block(BlockDef definition, Position localPosition, Chunk parent)
+    {
+        this.Definition = definition;
+        this.position = localPosition;
+        this.Chunk = parent;
+    }
 
-	public int Z {
-		get {
-			return this.position.z;
-		}
-	}
-
-	public Chunk Chunk {
-		get {
-			return this.chunk;
-		}
-	}
-
-	public Block(BlockDef definition, Position localPosition, Chunk parent) {
-		this.definition = definition;
-		this.position = localPosition;
-		this.chunk = parent;
-	}
-
-	public BlockDef getBlockDef() {
-		return definition;
-	}
-
-	public Chunk getChunk() {
-		return chunk;
-	}
-
-	public Position getAbsolutePosition() {
-		return new Position (chunk.X * 16 + position.x, chunk.Y * 16 + position.y, chunk.Z * 16 + position.z);
-	}
+    /// <summary>
+    /// Retourne la position absolue du bloc dans le terrain.
+    /// </summary>
+    public Position getAbsolutePosition()
+    {
+        return new Position(Chunk.position.X * 16 + position.X, Chunk.position.Y * 16 + position.Y, Chunk.position.Z * 16 + position.Z);
+    }
 
 }

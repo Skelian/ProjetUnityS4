@@ -1,41 +1,31 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿public class BlockDef
+{
+    /// <summary>
+    /// Nom du bloc.
+    /// </summary>
+    public string BlockName { get; private set; }
 
-public class BlockDef {
-	private string blockName;
-	private bool gravity;
-	private bool destructible;
-	private int id;
+    /// <summary>
+    /// True si le bloc est soumis à la gravité.
+    /// </summary>
+    public bool Gravity { get; private set; }
 
-	public BlockDef(int id, string name, bool gravity, bool destructible) {
-		this.id = id;
-		this.blockName = name;
-		this.gravity = gravity;
-		this.destructible = destructible;
-	}
+    /// <summary>
+    /// True si le bloc est destructible.
+    /// </summary>
+    public bool Destructible { get; private set; }
 
-	public string BlockName {
-		get {
-			return this.blockName;
-		}
-	}
+    /// <summary>
+    /// Identifiant du bloc.
+    /// </summary>
+    public int Id { get; private set; }
 
-	public bool Gravity {
-		get {
-			return this.gravity;
-		}
-	}
-
-	public bool IsDestructible {
-		get {
-			return this.destructible;
-		}
-	}
-
-	public int ID {
-		get {
-			return this.id;
-		}
-	}
+    public BlockDef(int id, string name, bool gravity, bool destructible)
+    {
+        this.Id = id;
+        this.BlockName = name;
+        this.Gravity = gravity;
+        this.Destructible = destructible;
+    }
 
 }
