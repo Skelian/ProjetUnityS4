@@ -86,12 +86,17 @@ Ensuite, toujours dans le menu GitHub, sélectionnez l'option Show window, cela 
 
 Voila, GitHub for Unity est installé !
 
-N'hésitez pas pour savoir si un nouveau commit a été fait de faire un Fetch dans l'onglet History. S'il y a eu de nouveaux commits, un nombre apparaîtra derrière push du style push (1).
+N'hésitez pas pour savoir si un nouveau commit a été fait de faire un Fetch dans l'onglet History. S'il y a eu de nouveaux commits, un nombre apparaîtra derrière pull du style pull (1).
 
 Pour pouvoir commit, allez dans l'onglet Changes, sélectionnez les fichiers que vous voulez inclure dans le commit (les fichiers que vous avez modifiés), mettez un titre court dans commit summary, par exemple Ajout fichiers, Fix du script X...
 
 Dans Commit Description, n'hésitez pas à détailler votre commit !
 
+Ensuite cliquez sur Commit to [master].
+
+Et enfin dans l'onglet History cliquez sur Push !
+
+S'il y a eu des commits entre-temps, vous aurez un message d'erreur et vous devrez pull pour inclure les modifications avant de pouvoir push sur la branche.
 # Vous avez tous les outils en mains pour collaborer sur le projet !
 
 Pour me contacter: [Guillaume Boutry](mailto:guillaume.boutry@u-psud.fr)
