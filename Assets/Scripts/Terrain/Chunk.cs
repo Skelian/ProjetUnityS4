@@ -1,9 +1,11 @@
-﻿public class Chunk
+﻿using System.IO;
+
+public class Chunk
 {
     /// <summary>
     /// Retourne un chunk vide (rempli d'air).
     /// </summary>
-    public static Chunk newEmptyChunk(Position chunkPos)
+    public static Chunk NewEmptyChunk(Position chunkPos)
     {
         Block[,,] blocks = new Block[16, 16, 16];
         BlockDef definition = BlockDefManager.GetBlockDef(Block.DEFAULT_ID);
@@ -127,6 +129,53 @@
                 return false;
 
         return true;
+    }
+
+    public static bool SaveChunk(string saveFolder, Chunk chunk)
+    {
+        if (!saveFolder.EndsWith("/"))
+            saveFolder += '/';
+
+        if (!Directory.Exists(saveFolder))
+            return false;
+
+        string filePath = saveFolder + "[" + chunk.position.X + "." + chunk.position.Y + "." + chunk.position.Z + "].chunk";
+        using (var writer = new BinaryWriter(File.Open(filePath, FileMode.Create)))
+        {
+            int x, y, z;
+            for (x = 0; x < 16; x++)
+                for (y = 0; y < 16; y++)
+                    for (z = 0; z < 16; z++)
+                        writer.Write(chunk.Blocks[x, y, z].ID);
+        }
+
+        return true;
+    }
+
+    public static Chunk LoadChunk(string saveFolder, Position chunkPos)
+    {
+        if (!saveFolder.EndsWith("/"))
+            saveFolder += '/';
+
+        if (!Directory.Exists(saveFolder))
+            return null;
+
+        string filePath = saveFolder + "[" + chunkPos.X + "." + chunkPos.Y + "." + chunkPos.Z + "].chunk";
+
+        var blocks = new Block[16, 16, 16];
+        Chunk newChunk = new Chunk(chunkPos);
+
+        using (var reader = new BinaryReader(File.Open(filePath, FileMode.Open)))
+        {
+            int x, y, z;
+            for (x = 0; x < 16; x++)
+                for (y = 0; y < 16; y++)
+                    for (z = 0; z < 16; z++)
+                        blocks[x, y, z] = new Block(BlockDefManager.GetBlockDef(reader.ReadInt32()), new Position(x, y, z), newChunk);
+        }
+
+        newChunk.Blocks = blocks;
+        return newChunk;
     }
 
     private bool IsValid(params Position[] positions)

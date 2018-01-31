@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 
 class World
 {
@@ -7,9 +8,18 @@ class World
     /// Chunks chargés en mémoire.
     /// </summary>
     public Chunk[,,] LoadedChunks { get; private set; }
-    private Chunk center;
-    private int loadDistance;
 
+    /// <summary>
+    /// Chunk central chargé en mémoire.
+    /// </summary>
+    public Chunk CenterChunk { get; private set; }
+
+    /// <summary>
+    /// Repertoire ou sont stockés les fichiers de chunks.
+    /// </summary>
+    private string saveDir;
+
+    private int loadDistance;
     /// <summary>
     /// Distance de chargement des chunks par rapport au joueur.
     /// </summary>
@@ -25,38 +35,69 @@ class World
             if (value > 0)
             {
                 loadDistance = value;
-                Update(true);
+                Reload(false);
             }
         }
     }
 
     /// <summary>
-    /// Met à jour les chunks chargés.
+    /// Sauvegarde contenant le monde.
     /// </summary>
-    /// <param name="force">Force le rechargement des chunks.</param>
-    public void Update(bool force = false)
-    {
-        if (force)
-        {
-            int tmp = loadDistance * 2 + 1;
-            LoadedChunks = new Chunk[tmp, tmp, tmp];
+    public Save ParentSave { get; private set; }
 
-            tmp = loadDistance + 1;
-            center = LoadedChunks[tmp, tmp, tmp];
-        }
+    /// <summary>
+    /// Id de la dimension.
+    /// </summary>
+    public int DimensionID { get; private set; }
+
+    public World(Save save, int dimensionID, int loadDistance, Position centerChunkPosition)
+    {
+        this.ParentSave = save;
+        this.DimensionID = dimensionID;
+        this.loadDistance = loadDistance;
+
+        saveDir = ParentSave.GetWorldsDir() + "/DIM_" + this.DimensionID + "/";
+        if (Directory.Exists(saveDir))
+            Directory.CreateDirectory(saveDir);
+
+        Reload(false);
     }
 
     /// <summary>
-    /// Retourne le chunk central parmis les chunks chargés en mémoire
+    /// Met à jour les chunks chargés.
     /// </summary>
-    public Chunk GetLastCenterChunk()
+    public void Update(Position centerChunkPosition)
     {
-        return center;
+
     }
 
+    /// <summary>
+    /// Force le rechargement des chunks.
+    /// </summary>
+    public void Reload(bool save = true)
+    {
+        if(save)
+            SaveLoadedChunks();
+
+        int tmp = loadDistance * 2 + 1;
+        LoadedChunks = new Chunk[tmp, tmp, tmp];
+
+        int x, y, z;
+        for (x = 0; x < tmp; x++)
+            for (y = 0; y < tmp; y++)
+                for (z = 0; z < tmp; z++)
+                    LoadedChunks[x, y, z] = getChunkFromFile(new Position(x, y, z));
+
+        tmp = loadDistance + 1;
+        CenterChunk = LoadedChunks[tmp, tmp, tmp];
+    }
+
+    /// <summary>
+    /// Envoie True si le chunk à la position spécifiée est chargé en mémoire.
+    /// </summary>
     public bool IsChunkLoaded(Position ChunkPos)
     {
-        var distance = Position.DistanceBetween(center.position, ChunkPos);
+        var distance = Position.DistanceBetween(CenterChunk.position, ChunkPos);
         return ((distance.X <= loadDistance) && (distance.Y <= loadDistance) && (distance.Z <= loadDistance));
     }
 
@@ -69,28 +110,35 @@ class World
         if (IsChunkLoaded(chunkPos))
         {
             int centerIndex = loadDistance + 1;
-            return LoadedChunks[centerIndex + center.position.X - chunkPos.X, centerIndex + center.position.Y - chunkPos.Y, centerIndex + center.position.Z - chunkPos.Z];
+            return LoadedChunks[centerIndex + CenterChunk.position.X - chunkPos.X, centerIndex + CenterChunk.position.Y - chunkPos.Y, centerIndex + CenterChunk.position.Z - chunkPos.Z];
         }
         else
         {
-            if(deep)
-            {
-                ///temporaire
-                return Chunk.newEmptyChunk(chunkPos);
-            }
+            if (deep)
+                return getChunkFromFile(chunkPos);
             else
-            {
                 return null;
-            }
         }
+    }
+
+    public Chunk getChunkFromFile(Position chunkPos)
+    {
+        return Chunk.LoadChunk(saveDir, chunkPos);
     }
 
     /// <summary>
     /// Sauvegarde le terrain.
     /// </summary>
-    public void Save()
+    public void SaveLoadedChunks()
     {
+        if (!Directory.Exists(saveDir))
+            Directory.CreateDirectory(saveDir);
 
+        int x, y, z;
+        for (x = 0; x < loadDistance; x++)
+            for (y = 0; y < loadDistance; y++)
+                for (z = 0; z < loadDistance; z++)
+                    Chunk.SaveChunk(saveDir, LoadedChunks[x, y, z]);
     }
 
 }
