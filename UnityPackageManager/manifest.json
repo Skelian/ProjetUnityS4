@@ -1,4 +1,9 @@
 {
-	"dependencies": {
+	"blocs": {
+		"terre": {
+			"id": "3",
+			"destructible": "1",
+			"gravity": "0"
+		}
 	}
 }

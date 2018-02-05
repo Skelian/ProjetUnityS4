@@ -20,12 +20,15 @@
     /// </summary>
     public int Id { get; private set; }
 
-    public BlockDef(int id, string name, bool gravity, bool destructible)
+    public int Resistance { get; private set; }
+
+    public BlockDef(int id, string name, bool gravity, int resistance, bool destructible)
     {
         this.Id = id;
         this.BlockName = name;
         this.Gravity = gravity;
         this.Destructible = destructible;
+        this.Resistance = resistance;
     }
 
 }

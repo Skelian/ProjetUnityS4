@@ -1,7 +1,11 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
+using UnityEngine;
 
 public class Chunk
 {
+    public const int SEED_FLAT = -1;
+
     /// <summary>
     /// Retourne un chunk vide (rempli d'air).
     /// </summary>
@@ -19,6 +23,30 @@ public class Chunk
 
         chunk.Blocks = blocks;
         return chunk;
+    }
+
+    /// <summary>
+    /// Retourne un chunk généré selon la Seed spécifiée.
+    /// </summary>
+    public static Chunk CreateChunk(Position chunkPos, int seed)
+    {
+        Block[,,] blocks = new Block[16, 16, 16];
+        Chunk chunk = new Chunk(chunkPos);
+
+        if (seed == Chunk.SEED_FLAT)
+        {
+            BlockDef definition = BlockDefManager.GetBlockDef(1);
+            int x, y, z;
+            for (x = 0; x < 16; x++)
+                for (y = 0; y < 16; y++)
+                    for (z = 0; z < 16; z++)
+                        blocks[x, y, z] = new Block(definition, new Position(x, y, z), chunk);
+
+            chunk.Blocks = blocks;
+            return chunk;
+        }
+
+        return null;
     }
 
     /// <summary>
@@ -152,7 +180,7 @@ public class Chunk
         return true;
     }
 
-    public static Chunk LoadChunk(string saveFolder, Position chunkPos)
+    public static Chunk LoadChunk(string saveFolder, Position chunkPos, int seed)
     {
         if (!saveFolder.EndsWith("/"))
             saveFolder += '/';
@@ -161,6 +189,9 @@ public class Chunk
             return null;
 
         string filePath = saveFolder + "[" + chunkPos.X + "." + chunkPos.Y + "." + chunkPos.Z + "].chunk";
+
+        if (!File.Exists(filePath))
+            return CreateChunk(chunkPos, seed);
 
         var blocks = new Block[16, 16, 16];
         Chunk newChunk = new Chunk(chunkPos);

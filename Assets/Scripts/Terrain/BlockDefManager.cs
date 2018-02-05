@@ -8,7 +8,7 @@ public class BlockDefManager
     /// <summary>
     /// Ajoute un nouveau bloc au registre des définitions.
     /// </summary>
-    public static bool NewBlockDef(int id, string name, bool destructible = true, bool gravity = false)
+    public static bool NewBlockDef(int id, string name, int resistance, bool destructible = true, bool gravity = false)
     {
         if (blockDefs.ContainsKey(id))
         {
@@ -16,10 +16,17 @@ public class BlockDefManager
         }
         else
         {
-            blockDefs.Add(id, new BlockDef(id, name, gravity, destructible));
+            blockDefs.Add(id, new BlockDef(id, name, gravity, resistance, destructible));
         }
 
         return true;
+    }
+
+    public static void ImportBlockDef()
+    {
+        string path = Data.GetDataPath() + "/blocs.dat";
+
+
     }
 
     /// <summary>

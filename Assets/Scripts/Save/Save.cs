@@ -1,8 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 
-class Save
+public class Save
 {
     /// <summary>
     /// Emplacement des sauvegardes du jeu.
@@ -39,6 +38,17 @@ class Save
         }
     }
 
+    public World AddNewWorld(int dimensionID, int seed)
+    {
+        string path = getWorldDir(dimensionID);
+        if (Directory.Exists(path))
+            return null;
+
+        Directory.CreateDirectory(path);
+
+        return new World(this, dimensionID, 10, new Position(0, 0, 0), seed);
+    }
+
     public string GetWorldsDir()
     {
         string dir =  SaveDir + "/worlds/";
@@ -47,6 +57,11 @@ class Save
             Directory.CreateDirectory(dir);
 
         return dir;
+    }
+
+    public string getWorldDir(int dimensionID)
+    {
+        return GetWorldsDir() + "DIM_" + dimensionID + "/"; 
     }
 
 }

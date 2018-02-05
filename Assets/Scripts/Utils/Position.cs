@@ -35,6 +35,26 @@ public class Position
         }
     }
 
+    public Position SubtractAll(int sub)
+    {
+        return AddAll(-sub);
+    }
+
+    public Position AddAll(int sub)
+    {
+        return new Position(x + sub, y + sub, z + sub);
+    }
+
+    public Position Substract(int x, int y, int z)
+    {
+        return Add(-x, -y, -z);
+    }
+
+    public Position Add(int x, int y, int z)
+    {
+        return new Position(this.x + x, this.y + y, this.z + z);
+    }
+
     /// <summary>
     /// Echange les coordonées des deux positions tel que toutes les coordonées
     /// de first soient inférieures aux coordonées de second
@@ -57,5 +77,13 @@ public class Position
     public static Position DistanceBetween(Position first, Position second)
     {
         return new Position(Math.Abs(first.x - second.x), Math.Abs(first.y - second.y), Math.Abs(first.z - second.z));
+    }
+
+    /// <summary>
+    /// Retourne l'offset entre les deux positions
+    /// </summary>
+    public static Position OffsetBetween(Position first, Position second)
+    {
+        return new Position(second.x - first.x, second.y - first.y, second.z - first.z);
     }
 }

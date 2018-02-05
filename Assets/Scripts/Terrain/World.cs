@@ -2,8 +2,14 @@
 using System.Collections.Generic;
 using System.IO;
 
-class World
+public class World
 {
+
+    /// <summary>
+    /// Seed de génération.
+    /// </summary>
+    public int Seed { get; private set; }
+
     /// <summary>
     /// Chunks chargés en mémoire.
     /// </summary>
@@ -50,15 +56,12 @@ class World
     /// </summary>
     public int DimensionID { get; private set; }
 
-    public World(Save save, int dimensionID, int loadDistance, Position centerChunkPosition)
+    public World(Save save, int dimensionID, int loadDistance, Position playerChunkPosition, int seed)
     {
         this.ParentSave = save;
         this.DimensionID = dimensionID;
+        this.Seed = seed;
         this.loadDistance = loadDistance;
-
-        saveDir = ParentSave.GetWorldsDir() + "/DIM_" + this.DimensionID + "/";
-        if (Directory.Exists(saveDir))
-            Directory.CreateDirectory(saveDir);
 
         Reload(false);
     }
@@ -66,8 +69,96 @@ class World
     /// <summary>
     /// Met à jour les chunks chargés.
     /// </summary>
-    public void Update(Position centerChunkPosition)
+    public void Update(Position playerChunkPosition)
     {
+        if (playerChunkPosition == CenterChunk.position)
+            return;
+
+        Position offset = Position.OffsetBetween(CenterChunk.position, playerChunkPosition);
+        if((Math.Abs(offset.X) >= LoadedChunks.Length) || (Math.Abs(offset.Y) >= LoadedChunks.Length) || (Math.Abs(offset.Z) >= LoadedChunks.Length))
+        {
+            Reload();
+            return;
+        }
+
+        int x, sx, off_x, end_x;
+        int y, sy, off_y, end_y;
+        int z, off_z, end_z;
+        
+        //setup X
+        if(offset.X >= 0)
+        {
+            x = sx = 0;
+            off_x = 1;
+            end_x = LoadedChunks.Length;
+        }
+        else
+        {
+            x = sx = LoadedChunks.Length - 1;
+            off_x = -1;
+            end_x = -1;
+        }
+
+        //setup Y
+        if (offset.Y >= 0)
+        {
+            y = sy = 0;
+            off_y = 1;
+            end_y = LoadedChunks.Length;
+        }
+        else
+        {
+            y = sy = LoadedChunks.Length - 1;
+            off_y = -1;
+            end_y = -1;
+        }
+
+        //setup Z
+        if (offset.Z >= 0)
+        {
+            z = 0;
+            off_z = 1;
+            end_z = LoadedChunks.Length;
+        }
+        else
+        {
+            z = LoadedChunks.Length - 1;
+            off_z = -1;
+            end_z = -1;
+        }
+
+        Position start = playerChunkPosition.SubtractAll(loadDistance);
+        int len = LoadedChunks.Length;
+
+        while(z != end_z)
+        {
+            while(y != end_y)
+            {
+                while(x != end_x)
+                {
+                    if ((x + offset.X < 0) || (x + offset.X >= len) || (y + offset.Y < 0) || (y + offset.Y >= len) || (z + offset.Z < 0) || (z + offset.Z >= len))
+                    {
+                        LoadedChunks[x, y, z] = getChunkFromFile(start.Add(x, y, z));
+                    }
+                    else
+                    {
+                        if ((offset.X < 0 ? x - offset.X >= len : x - offset.X < 0) || (offset.Y < 0 ? y - offset.Y >= len : y - offset.Y < 0) || (offset.Z < 0 ? z - offset.Z >= len : z - offset.Z < 0))
+                            Chunk.SaveChunk(saveDir, LoadedChunks[x, y, z]);
+
+                        LoadedChunks[x, y, z] = LoadedChunks[x + offset.X, y + offset.Y, z + offset.Z];
+                    }
+
+                    x += off_x;
+                }
+
+                x = sx;
+                y += off_y;
+            }
+
+            y = sy;
+            z += off_z;
+        }
+
 
     }
 
@@ -123,7 +214,7 @@ class World
 
     public Chunk getChunkFromFile(Position chunkPos)
     {
-        return Chunk.LoadChunk(saveDir, chunkPos);
+        return Chunk.LoadChunk(saveDir, chunkPos, Seed);
     }
 
     /// <summary>
