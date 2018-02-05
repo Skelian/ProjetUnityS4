@@ -9,7 +9,7 @@ Bonjour et bienvenue sur la page du projet S4 du groupe 4B de l'Institut Univers
 * [Alexis Aune](mailto:alexis.aune@u-psud.fr)
 * [Camille Beaugendre](mailto:camille.beaugendre@u-psud.fr)
 * [Guillaume Boutry](mailto:guillaume.boutry@u-psud.fr)
-* [Dylan Mazin--Saïdi)(https://www.lirewyre.com)
+* [Dylan Mazin--Saïdi](https://www.lirewyre.com)
 * [Florian Cezard](mailto:florian.cezard@u-psud.fr)
 * [Allan Couderette](mailto:allan.couderette@u-psud.fr)
 * [Ludovic Lecrocq](mailto:ludovic.locrocq@u-psud.fr)
