@@ -1,4 +1,5 @@
 ﻿using System;
+using UnityEngine;
 
 public class Position
 {
@@ -85,5 +86,15 @@ public class Position
     public static Position OffsetBetween(Position first, Position second)
     {
         return new Position(second.x - first.x, second.y - first.y, second.z - first.z);
+    }
+
+    public static Position Vec3ToPos(Vector3 vec)
+    {
+        return new Position(Convert.ToInt32(vec.x), Convert.ToInt32(vec.y), Convert.ToInt32(vec.z));
+    }
+
+    public Vector3 ToVec3()
+    {
+        return new Vector3(x, y, z);
     }
 }

@@ -38,13 +38,11 @@ public class Save
         }
     }
 
-    public World AddNewWorld(int dimensionID, int seed)
+    public World GetWorld(int dimensionID, int seed)
     {
-        string path = getWorldDir(dimensionID);
-        if (Directory.Exists(path))
-            return null;
-
-        Directory.CreateDirectory(path);
+        string path = GetWorldDir(dimensionID);
+        if (!Directory.Exists(path))
+            Directory.CreateDirectory(path);
 
         return new World(this, dimensionID, 10, new Position(0, 0, 0), seed);
     }
@@ -59,7 +57,7 @@ public class Save
         return dir;
     }
 
-    public string getWorldDir(int dimensionID)
+    public string GetWorldDir(int dimensionID)
     {
         return GetWorldsDir() + "DIM_" + dimensionID + "/"; 
     }

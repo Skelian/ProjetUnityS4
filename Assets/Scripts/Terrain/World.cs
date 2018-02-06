@@ -63,6 +63,10 @@ public class World
         this.Seed = seed;
         this.loadDistance = loadDistance;
 
+        saveDir = save.GetWorldDir(dimensionID) + "chunks/";
+        if (!Directory.Exists(saveDir))
+            Directory.CreateDirectory(saveDir);
+
         Reload(false);
     }
 
@@ -138,7 +142,7 @@ public class World
                 {
                     if ((x + offset.X < 0) || (x + offset.X >= len) || (y + offset.Y < 0) || (y + offset.Y >= len) || (z + offset.Z < 0) || (z + offset.Z >= len))
                     {
-                        LoadedChunks[x, y, z] = getChunkFromFile(start.Add(x, y, z));
+                        LoadedChunks[x, y, z] = GetChunkFromFile(start.Add(x, y, z));
                     }
                     else
                     {
@@ -177,7 +181,7 @@ public class World
         for (x = 0; x < tmp; x++)
             for (y = 0; y < tmp; y++)
                 for (z = 0; z < tmp; z++)
-                    LoadedChunks[x, y, z] = getChunkFromFile(new Position(x, y, z));
+                    LoadedChunks[x, y, z] = GetChunkFromFile(new Position(x, y, z));
 
         tmp = loadDistance + 1;
         CenterChunk = LoadedChunks[tmp, tmp, tmp];
@@ -206,13 +210,13 @@ public class World
         else
         {
             if (deep)
-                return getChunkFromFile(chunkPos);
+                return GetChunkFromFile(chunkPos);
             else
                 return null;
         }
     }
 
-    public Chunk getChunkFromFile(Position chunkPos)
+    public Chunk GetChunkFromFile(Position chunkPos)
     {
         return Chunk.LoadChunk(saveDir, chunkPos, Seed);
     }
@@ -222,9 +226,6 @@ public class World
     /// </summary>
     public void SaveLoadedChunks()
     {
-        if (!Directory.Exists(saveDir))
-            Directory.CreateDirectory(saveDir);
-
         int x, y, z;
         for (x = 0; x < loadDistance; x++)
             for (y = 0; y < loadDistance; y++)

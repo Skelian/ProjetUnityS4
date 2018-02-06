@@ -30,23 +30,7 @@ public class Chunk
     /// </summary>
     public static Chunk CreateChunk(Position chunkPos, int seed)
     {
-        Block[,,] blocks = new Block[16, 16, 16];
-        Chunk chunk = new Chunk(chunkPos);
-
-        if (seed == Chunk.SEED_FLAT)
-        {
-            BlockDef definition = BlockDefManager.GetBlockDef(1);
-            int x, y, z;
-            for (x = 0; x < 16; x++)
-                for (y = 0; y < 16; y++)
-                    for (z = 0; z < 16; z++)
-                        blocks[x, y, z] = new Block(definition, new Position(x, y, z), chunk);
-
-            chunk.Blocks = blocks;
-            return chunk;
-        }
-
-        return null;
+        return NewEmptyChunk(chunkPos);
     }
 
     /// <summary>
@@ -182,9 +166,6 @@ public class Chunk
 
     public static Chunk LoadChunk(string saveFolder, Position chunkPos, int seed)
     {
-        if (!saveFolder.EndsWith("/"))
-            saveFolder += '/';
-
         if (!Directory.Exists(saveFolder))
             return null;
 
