@@ -1,9 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using UnityEngine;
 
 public class World
 {
+
+    public static int SEED_EMPTY_WORLD = -1;
+    public static int SEED_TEST_WORLD = -2;
 
     /// <summary>
     /// Seed de génération.
@@ -41,7 +45,7 @@ public class World
             if (value > 0)
             {
                 loadDistance = value;
-                Reload(false);
+                Reload(CenterChunk.Position, false);
             }
         }
     }
@@ -56,7 +60,7 @@ public class World
     /// </summary>
     public int DimensionID { get; private set; }
 
-    public World(Save save, int dimensionID, int loadDistance, Position playerChunkPosition, int seed)
+    public World(Save save, int dimensionID, int loadDistance, Vector3 playerPosition, int seed)
     {
         this.ParentSave = save;
         this.DimensionID = dimensionID;
@@ -67,21 +71,22 @@ public class World
         if (!Directory.Exists(saveDir))
             Directory.CreateDirectory(saveDir);
 
-        Reload(false);
+        Reload(EntityUtils.GetChunkPosition(playerPosition), false);
     }
 
     /// <summary>
     /// Met à jour les chunks chargés.
     /// </summary>
-    public void Update(Position playerChunkPosition)
+    public void Update(Vector3 playerPosition)
     {
-        if (playerChunkPosition == CenterChunk.position)
+        Position playerChunkPosition = EntityUtils.GetChunkPosition(playerPosition);
+        if (playerChunkPosition == CenterChunk.Position)
             return;
 
-        Position offset = Position.OffsetBetween(CenterChunk.position, playerChunkPosition);
+        Position offset = Position.OffsetBetween(CenterChunk.Position, playerChunkPosition);
         if((Math.Abs(offset.X) >= LoadedChunks.Length) || (Math.Abs(offset.Y) >= LoadedChunks.Length) || (Math.Abs(offset.Z) >= LoadedChunks.Length))
         {
-            Reload();
+            Reload(playerChunkPosition);
             return;
         }
 
@@ -169,7 +174,7 @@ public class World
     /// <summary>
     /// Force le rechargement des chunks.
     /// </summary>
-    public void Reload(bool save = true)
+    public void Reload(Position centerChunkPosition, bool save = true)
     {
         if(save)
             SaveLoadedChunks();
@@ -177,11 +182,13 @@ public class World
         int tmp = loadDistance * 2 + 1;
         LoadedChunks = new Chunk[tmp, tmp, tmp];
 
+        Position start = centerChunkPosition.SubtractAll(loadDistance);
+
         int x, y, z;
         for (x = 0; x < tmp; x++)
             for (y = 0; y < tmp; y++)
                 for (z = 0; z < tmp; z++)
-                    LoadedChunks[x, y, z] = GetChunkFromFile(new Position(x, y, z));
+                    LoadedChunks[x, y, z] = GetChunkFromFile(new Position(start.X + x, start.Y + y, start.Z + z));
 
         tmp = loadDistance + 1;
         CenterChunk = LoadedChunks[tmp, tmp, tmp];
@@ -192,7 +199,7 @@ public class World
     /// </summary>
     public bool IsChunkLoaded(Position ChunkPos)
     {
-        var distance = Position.DistanceBetween(CenterChunk.position, ChunkPos);
+        Position distance = Position.DistanceBetween(CenterChunk.Position, ChunkPos);
         return ((distance.X <= loadDistance) && (distance.Y <= loadDistance) && (distance.Z <= loadDistance));
     }
 
@@ -205,7 +212,7 @@ public class World
         if (IsChunkLoaded(chunkPos))
         {
             int centerIndex = loadDistance + 1;
-            return LoadedChunks[centerIndex + CenterChunk.position.X - chunkPos.X, centerIndex + CenterChunk.position.Y - chunkPos.Y, centerIndex + CenterChunk.position.Z - chunkPos.Z];
+            return LoadedChunks[centerIndex + CenterChunk.Position.X - chunkPos.X, centerIndex + CenterChunk.Position.Y - chunkPos.Y, centerIndex + CenterChunk.Position.Z - chunkPos.Z];
         }
         else
         {

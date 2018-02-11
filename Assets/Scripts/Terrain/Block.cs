@@ -1,11 +1,12 @@
-﻿public class Block
-{
+﻿using UnityEngine;
 
+public class Block
+{
     public static int DEFAULT_ID = 0;
 
     public BlockDef Definition { get; set; }
     public Chunk Chunk { get; private set; }
-    private Position position;
+    private GameObject blockObject;
 
     public int ID
     {
@@ -22,7 +23,7 @@
     {
         get
         {
-            return position.X;
+            return (int) blockObject.transform.position.x;
         }
     }
 
@@ -33,7 +34,7 @@
     {
         get
         {
-            return position.Y;
+            return (int) blockObject.transform.position.y;
         }
     }
 
@@ -44,23 +45,28 @@
     {
         get
         {
-            return position.Z;
+            return (int) blockObject.transform.position.z;
         }
     }
 
-    public Block(BlockDef definition, Position localPosition, Chunk parent)
+    public Block(BlockDef definition, Vector3 localPosition, Chunk parent)
     {
         this.Definition = definition;
-        this.position = localPosition;
         this.Chunk = parent;
+
+        if (definition.Id != Block.DEFAULT_ID)
+        {
+            blockObject = GameObject.Instantiate(definition.BlockObject);
+            blockObject.GetComponent<Transform>().position = localPosition;
+        }
     }
 
     /// <summary>
     /// Retourne la position absolue du bloc dans le terrain.
     /// </summary>
-    public Position getAbsolutePosition()
+    public Position GetAbsolutePosition()
     {
-        return new Position(Chunk.position.X * 16 + position.X, Chunk.position.Y * 16 + position.Y, Chunk.position.Z * 16 + position.Z);
+        return new Position(Chunk.Position.X * 16 + X, Chunk.Position.Y * 16 + Y, Chunk.Position.Z * 16 + Z);
     }
 
 }

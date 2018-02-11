@@ -1,12 +1,13 @@
 ﻿using System;
 using System.IO;
+using UnityEngine;
 
 public class Save
 {
     /// <summary>
     /// Emplacement des sauvegardes du jeu.
     /// </summary>
-    public static string SavesPath = "/saves/";
+    public static string SavesPath = "saves/";
 
     /// <summary>
     /// Nom de la sauvegarde.
@@ -18,33 +19,22 @@ public class Save
     /// </summary>
     public string SaveDir { get; private set; }
 
-    /// <summary>
-    /// Liste des mondes sauvegardés.
-    /// </summary>
-    public string[] Dimensions { get; private set; }
-
     public Save(String saveName)
     {
         this.SaveName = saveName;
         this.SaveDir = SavesPath + saveName;
 
         if(!Directory.Exists(SaveDir))
-        {
             Directory.CreateDirectory(SaveDir);
-        }
-        else
-        {
-            Dimensions = Directory.GetFiles(GetWorldsDir());
-        }
     }
 
-    public World GetWorld(int dimensionID, int seed)
+    public World GetWorld(int dimensionID, int seed, Vector3 playerPosition)
     {
         string path = GetWorldDir(dimensionID);
         if (!Directory.Exists(path))
             Directory.CreateDirectory(path);
 
-        return new World(this, dimensionID, 10, new Position(0, 0, 0), seed);
+        return new World(this, dimensionID, 2, playerPosition, seed);
     }
 
     public string GetWorldsDir()

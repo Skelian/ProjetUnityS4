@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using UnityEngine;
 
 public class BlockDefManager
 {
@@ -22,11 +23,15 @@ public class BlockDefManager
         return true;
     }
 
-    public static void ImportBlockDef()
+    public static void InitBlockDefinitions()
     {
-        string path = Data.GetDataPath() + "/blocs.dat";
+        BlockDef.BaseBlockObject = Resources.Load("Prefabs/BaseBlockObject") as GameObject;
 
+        if (BlockDef.BaseBlockObject == null)
+            Debug.Log("baseblock is null");
 
+        NewBlockDef(Block.DEFAULT_ID, "air", 0, false);
+        NewBlockDef(1, "dirt", 2);
     }
 
     /// <summary>

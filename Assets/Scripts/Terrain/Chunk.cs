@@ -4,39 +4,11 @@ using UnityEngine;
 
 public class Chunk
 {
-    public const int SEED_FLAT = -1;
-
-    /// <summary>
-    /// Retourne un chunk vide (rempli d'air).
-    /// </summary>
-    public static Chunk NewEmptyChunk(Position chunkPos)
-    {
-        Block[,,] blocks = new Block[16, 16, 16];
-        BlockDef definition = BlockDefManager.GetBlockDef(Block.DEFAULT_ID);
-        Chunk chunk = new Chunk(chunkPos);
-
-        int x, y, z;
-        for (x = 0; x < 16; x++)
-            for (y = 0; y < 16; y++)
-                for (z = 0; z < 16; z++)
-                    blocks[x, y, z] = new Block(definition, new Position(x, y, z), chunk);
-
-        chunk.Blocks = blocks;
-        return chunk;
-    }
-
-    /// <summary>
-    /// Retourne un chunk généré selon la Seed spécifiée.
-    /// </summary>
-    public static Chunk CreateChunk(Position chunkPos, int seed)
-    {
-        return NewEmptyChunk(chunkPos);
-    }
 
     /// <summary>
     /// Coordonées du chunk.
     /// </summary>
-    public Position position { get; private set; }
+    public Position Position { get; private set; }
 
     /// <summary>
     /// Blocs du chunk.
@@ -46,12 +18,12 @@ public class Chunk
     public Chunk(Block[,,] blocks, Position position)
     {
         this.Blocks = blocks;
-        this.position = position;
+        this.Position = position;
     }
 
     private Chunk(Position position)
     {
-        this.position = position;
+        this.Position = position;
     }
 
     /// <summary>
@@ -114,7 +86,7 @@ public class Chunk
     /// <summary>
     /// Remplace les blocs présents entre les deux coordonées locales indiquées (0 à 15).
     /// </summary>
-    private bool SetBlockBatch(int id, Position first, Position second)
+    public bool SetBlockBatch(int id, Position first, Position second)
     {
         if (!IsValid(first, second))
             return false;
@@ -134,7 +106,16 @@ public class Chunk
         return true;
     }
 
-    private bool IsValid(params int[] positions)
+    public bool IsEmpty()
+    {
+        foreach (Block b in Blocks)
+            if (b.ID != Block.DEFAULT_ID)
+                return false;
+
+        return true;
+    }
+
+    private static bool IsValid(params int[] positions)
     {
         foreach (int pos in positions)
             if ((pos < 0) || (pos > 15))
@@ -143,15 +124,18 @@ public class Chunk
         return true;
     }
 
+    private static bool IsValid(params Position[] positions)
+    {
+        foreach (Position pos in positions)
+            if (!IsValid(pos.X, pos.Y, pos.Z))
+                return false;
+
+        return true;
+    }
+
     public static bool SaveChunk(string saveFolder, Chunk chunk)
     {
-        if (!saveFolder.EndsWith("/"))
-            saveFolder += '/';
-
-        if (!Directory.Exists(saveFolder))
-            return false;
-
-        string filePath = saveFolder + "[" + chunk.position.X + "." + chunk.position.Y + "." + chunk.position.Z + "].chunk";
+        string filePath = saveFolder + "[" + chunk.Position.X + "." + chunk.Position.Y + "." + chunk.Position.Z + "].chunk";
         using (var writer = new BinaryWriter(File.Open(filePath, FileMode.Create)))
         {
             int x, y, z;
@@ -183,20 +167,55 @@ public class Chunk
             for (x = 0; x < 16; x++)
                 for (y = 0; y < 16; y++)
                     for (z = 0; z < 16; z++)
-                        blocks[x, y, z] = new Block(BlockDefManager.GetBlockDef(reader.ReadInt32()), new Position(x, y, z), newChunk);
+                        blocks[x, y, z] = new Block(BlockDefManager.GetBlockDef(reader.ReadInt32()), new Vector3(x, y, z), newChunk);
         }
 
         newChunk.Blocks = blocks;
         return newChunk;
     }
 
-    private bool IsValid(params Position[] positions)
+    /// <summary>
+    /// Retourne un chunk vide (rempli d'air).
+    /// </summary>
+    public static Chunk NewEmptyChunk(Position chunkPos)
     {
-        foreach (Position pos in positions)
-            if (!IsValid(pos.X, pos.Y, pos.Z))
-                return false;
+        return NewFilledChunk(chunkPos, Block.DEFAULT_ID);
+    }
 
-        return true;
+    public static Chunk NewFilledChunk(Position chunkPos, int blockID)
+    {
+        Block[,,] blocks = new Block[16, 16, 16];
+        BlockDef definition = BlockDefManager.GetBlockDef(blockID);
+        Chunk chunk = new Chunk(chunkPos);
+
+        int x, y, z;
+        for (x = 0; x < 16; x++)
+            for (y = 0; y < 16; y++)
+                for (z = 0; z < 16; z++)
+                    blocks[x, y, z] = new Block(definition, new Vector3(x, y, z), chunk);
+
+        chunk.Blocks = blocks;
+        return chunk;
+    }
+
+    /// <summary>
+    /// Retourne un chunk généré selon la Seed spécifiée.
+    /// </summary>
+    public static Chunk CreateChunk(Position chunkPos, int seed)
+    {
+        if (seed == World.SEED_EMPTY_WORLD)
+        {
+            return NewEmptyChunk(chunkPos);
+        }
+
+        //test flat world
+        if (seed == World.SEED_TEST_WORLD)
+        {
+            return chunkPos.Y == 0 ? NewFilledChunk(chunkPos, 1) : NewEmptyChunk(chunkPos);
+        }
+
+        //temporary
+        return NewEmptyChunk(chunkPos);
     }
 
 }
