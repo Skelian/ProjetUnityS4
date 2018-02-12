@@ -1,5 +1,22 @@
-﻿public class BlockDef
+﻿using UnityEngine;
+
+public class BlockDef
 {
+    private static GameObject BaseBlockObject = Resources.Load("Prefabs/BaseBlockObject") as GameObject;
+
+    /// <summary>
+    /// GameObject du bloc, avec sa texture, un appel de la property renvoi un clone du bloc
+    /// </summary>
+    private GameObject blockObject;
+    public GameObject BlockObject
+    {
+        get
+        {
+            return GameObject.Instantiate(blockObject);
+        }
+    }
+
+
     /// <summary>
     /// Nom du bloc.
     /// </summary>
@@ -20,6 +37,9 @@
     /// </summary>
     public int Id { get; private set; }
 
+    /// <summary>
+    /// Resistance à la destruction
+    /// </summary>
     public int Resistance { get; private set; }
 
     public BlockDef(int id, string name, bool gravity, int resistance, bool destructible)
@@ -29,6 +49,9 @@
         this.Gravity = gravity;
         this.Destructible = destructible;
         this.Resistance = resistance;
+
+        if(id != Block.DEFAULT_ID)
+            this.blockObject = GameObject.Instantiate(BaseBlockObject);
     }
 
 }

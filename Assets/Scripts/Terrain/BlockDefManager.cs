@@ -25,11 +25,6 @@ public class BlockDefManager
 
     public static void InitBlockDefinitions()
     {
-        BlockDef.BaseBlockObject = Resources.Load("Prefabs/BaseBlockObject") as GameObject;
-
-        if (BlockDef.BaseBlockObject == null)
-            Debug.Log("baseblock is null");
-
         NewBlockDef(Block.DEFAULT_ID, "air", 0, false);
         NewBlockDef(1, "dirt", 2);
     }

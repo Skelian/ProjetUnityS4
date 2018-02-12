@@ -46,7 +46,7 @@ public class Position
         return new Position(x + sub, y + sub, z + sub);
     }
 
-    public Position Substract(int x, int y, int z)
+    public Position Subtract(int x, int y, int z)
     {
         return Add(-x, -y, -z);
     }
