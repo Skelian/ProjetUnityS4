@@ -168,7 +168,7 @@ public class World
             z += off_z;
         }
 
-
+        CenterChunk = LoadedChunks[loadDistance, loadDistance, loadDistance];
     }
 
     /// <summary>
@@ -188,10 +188,9 @@ public class World
         for (x = 0; x < tmp; x++)
             for (y = 0; y < tmp; y++)
                 for (z = 0; z < tmp; z++)
-                    LoadedChunks[x, y, z] = GetChunkFromFile(new Position(start.X + x, start.Y + y, start.Z + z));
+                    LoadedChunks[x, y, z] = GetChunkFromFile(start.Add(x, y, z));
 
-        tmp = loadDistance + 1;
-        CenterChunk = LoadedChunks[tmp, tmp, tmp];
+        CenterChunk = LoadedChunks[loadDistance, loadDistance, loadDistance];
     }
 
     /// <summary>
@@ -233,11 +232,8 @@ public class World
     /// </summary>
     public void SaveLoadedChunks()
     {
-        int x, y, z;
-        for (x = 0; x < loadDistance; x++)
-            for (y = 0; y < loadDistance; y++)
-                for (z = 0; z < loadDistance; z++)
-                    Chunk.SaveChunk(saveDir, LoadedChunks[x, y, z]);
+        foreach(Chunk chunk in LoadedChunks)
+            Chunk.SaveChunk(saveDir, chunk);
     }
 
 }

@@ -34,7 +34,7 @@ public class Save
         if (!Directory.Exists(path))
             Directory.CreateDirectory(path);
 
-        return new World(this, dimensionID, 2, playerPosition, seed);
+        return new World(this, dimensionID, Settings.loadDistance, playerPosition, seed);
     }
 
     public string GetWorldsDir()

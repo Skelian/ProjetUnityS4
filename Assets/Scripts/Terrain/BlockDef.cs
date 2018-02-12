@@ -7,15 +7,7 @@ public class BlockDef
     /// <summary>
     /// GameObject du bloc, avec sa texture, un appel de la property renvoi un clone du bloc
     /// </summary>
-    private GameObject blockObject;
-    public GameObject BlockObject
-    {
-        get
-        {
-            return GameObject.Instantiate(blockObject);
-        }
-    }
-
+    public GameObject BlockObject { get; private set; }
 
     /// <summary>
     /// Nom du bloc.
@@ -42,6 +34,13 @@ public class BlockDef
     /// </summary>
     public int Resistance { get; private set; }
 
+    public GameObject Instantiate()
+    {
+        GameObject o = GameObject.Instantiate(BlockObject);
+        o.SetActive(true);
+        return o;
+    }
+
     public BlockDef(int id, string name, bool gravity, int resistance, bool destructible)
     {
         this.Id = id;
@@ -50,8 +49,11 @@ public class BlockDef
         this.Destructible = destructible;
         this.Resistance = resistance;
 
-        if(id != Block.DEFAULT_ID)
-            this.blockObject = GameObject.Instantiate(BaseBlockObject);
+        if (id != Block.DEFAULT_ID)
+        {
+            this.BlockObject = GameObject.Instantiate(BaseBlockObject);
+            this.BlockObject.SetActive(false);
+        }
     }
 
 }

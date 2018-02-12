@@ -160,6 +160,7 @@ public class Chunk
 
         var blocks = new Block[16, 16, 16];
         Chunk newChunk = new Chunk(chunkPos);
+        Position globalChunkPos = chunkPos.MultAll(16);
 
         using (var reader = new BinaryReader(File.Open(filePath, FileMode.Open)))
         {
@@ -167,7 +168,7 @@ public class Chunk
             for (x = 0; x < 16; x++)
                 for (y = 0; y < 16; y++)
                     for (z = 0; z < 16; z++)
-                        blocks[x, y, z] = new Block(BlockDefManager.GetBlockDef(reader.ReadInt32()), new Vector3(x, y, z), newChunk);
+                        blocks[x, y, z] = new Block(BlockDefManager.GetBlockDef(reader.ReadInt32()), globalChunkPos.Add(x, y, z).ToVec3(), newChunk);
         }
 
         newChunk.Blocks = blocks;
@@ -187,12 +188,13 @@ public class Chunk
         Block[,,] blocks = new Block[16, 16, 16];
         BlockDef definition = BlockDefManager.GetBlockDef(blockID);
         Chunk chunk = new Chunk(chunkPos);
+        Position globalChunkPos = chunkPos.MultAll(16);
 
         int x, y, z;
         for (x = 0; x < 16; x++)
             for (y = 0; y < 16; y++)
                 for (z = 0; z < 16; z++)
-                    blocks[x, y, z] = new Block(definition, new Vector3(x, y, z), chunk);
+                    blocks[x, y, z] = new Block(definition, globalChunkPos.Add(x, y, z).ToVec3(), chunk);
 
         chunk.Blocks = blocks;
         return chunk;

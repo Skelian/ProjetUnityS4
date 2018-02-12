@@ -56,8 +56,8 @@ public class Block
 
         if (definition.Id != Block.DEFAULT_ID)
         {
-            blockObject = GameObject.Instantiate(definition.BlockObject);
-            blockObject.GetComponent<Transform>().position = localPosition;
+            blockObject = definition.Instantiate();
+            blockObject.transform.position = localPosition;
         }
     }
 

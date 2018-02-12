@@ -56,6 +56,16 @@ public class Position
         return new Position(this.x + x, this.y + y, this.z + z);
     }
 
+    public Position Mult(int coefX, int coefY, int coefZ)
+    {
+        return new Position(this.x * coefX, this.y * coefY, this.z * coefZ);
+    }
+
+    public Position MultAll(int coef)
+    {
+        return new Position(this.x * coef, this.y * coef, this.z * coef);
+    }
+
     /// <summary>
     /// Echange les coordonées des deux positions tel que toutes les coordonées
     /// de first soient inférieures aux coordonées de second
