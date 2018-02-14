@@ -2,13 +2,6 @@
 
 public class BlockDef
 {
-    private static GameObject BaseBlockObject = Resources.Load("Prefabs/BaseBlockObject") as GameObject;
-
-    /// <summary>
-    /// GameObject du bloc, avec sa texture, un appel de la property renvoi un clone du bloc
-    /// </summary>
-    public GameObject BlockObject { get; private set; }
-
     /// <summary>
     /// Nom du bloc.
     /// </summary>
@@ -34,25 +27,69 @@ public class BlockDef
     /// </summary>
     public int Resistance { get; private set; }
 
-    public GameObject Instantiate()
+    /// <summary>
+    /// Vrai si le bloc est transparent
+    /// </summary>
+    public bool Transparent { get; private set; }
+
+    public Rect UvRect { get; set; }
+
+    /// <summary>
+    /// Nombre de dégats infligés au joueur par 0.5 seconde au contact du bloc
+    /// </summary>
+    public int DamageOnContact { get; private set; }
+
+    public BlockDef(int id, string name, int resistance, bool transparent, bool gravity, bool destructible, int damageOnContact)
     {
-        GameObject o = GameObject.Instantiate(BlockObject);
-        o.SetActive(true);
-        return o;
+        Id = id;
+        BlockName = name;
+        Resistance = resistance;
+        Transparent = transparent;
+        Gravity = gravity;
+        Destructible = destructible;
+        DamageOnContact = damageOnContact;
     }
 
-    public BlockDef(int id, string name, bool gravity, int resistance, bool destructible)
+    public class BlockDefBuilder
     {
-        this.Id = id;
-        this.BlockName = name;
-        this.Gravity = gravity;
-        this.Destructible = destructible;
-        this.Resistance = resistance;
+        private string blockName;
+        private int id, resistance, damageOnContact = 0;
+        private bool gravity = false, transparent = false, destructible = true;
 
-        if (id != Block.DEFAULT_ID)
+        public BlockDefBuilder(int id, string blockName, int resistance)
         {
-            this.BlockObject = GameObject.Instantiate(BaseBlockObject);
-            this.BlockObject.SetActive(false);
+            this.id = id;
+            this.blockName = blockName;
+            this.resistance = resistance;
+        }
+
+        public BlockDefBuilder SetGravity(bool gravity)
+        {
+            this.gravity = gravity;
+            return this;
+        }
+
+        public BlockDefBuilder SetDestructible(bool destructible)
+        {
+            this.destructible = destructible;
+            return this;
+        }
+
+        public BlockDefBuilder SetTransparent(bool transparent)
+        {
+            this.transparent = transparent;
+            return this;
+        }
+
+        public BlockDefBuilder SetDamageOnContact(int damageOnContact)
+        {
+            this.damageOnContact = damageOnContact;
+            return this;
+        }
+
+        public BlockDef Build()
+        {
+            return new BlockDef(id, blockName, resistance, transparent, gravity, destructible, damageOnContact);
         }
     }
 

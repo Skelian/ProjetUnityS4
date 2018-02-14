@@ -2,9 +2,16 @@
 
 class EntityUtils
 {
+    /// <summary>
+    /// Return the entity current chunk position
+    /// </summary>
     public static Position GetChunkPosition(Vector3 entityPos)
     {
-        return new Position(Mathf.FloorToInt(entityPos.x / 16), Mathf.FloorToInt(entityPos.y / 16), Mathf.FloorToInt(entityPos.z / 16));
+        return new Position(
+                                Mathf.FloorToInt(entityPos.x / Chunk.CHUNK_SIZE),
+                                Mathf.FloorToInt(entityPos.y / Chunk.CHUNK_SIZE),
+                                Mathf.FloorToInt(entityPos.z / Chunk.CHUNK_SIZE)
+                            );
     }
 
 }

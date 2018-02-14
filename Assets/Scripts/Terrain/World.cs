@@ -5,7 +5,6 @@ using UnityEngine;
 
 public class World
 {
-
     public static int SEED_EMPTY_WORLD = -1;
     public static int SEED_TEST_WORLD = -2;
 
@@ -27,7 +26,7 @@ public class World
     /// <summary>
     /// Repertoire ou sont stockés les fichiers de chunks.
     /// </summary>
-    private string saveDir;
+    public string saveDir { get; private set; }
 
     private int loadDistance;
     /// <summary>
@@ -83,8 +82,10 @@ public class World
         if (playerChunkPosition == CenterChunk.Position)
             return;
 
+        int len = LoadedChunks.GetLength(0);
+
         Position offset = Position.OffsetBetween(CenterChunk.Position, playerChunkPosition);
-        if((Math.Abs(offset.X) >= LoadedChunks.Length) || (Math.Abs(offset.Y) >= LoadedChunks.Length) || (Math.Abs(offset.Z) >= LoadedChunks.Length))
+        if((Math.Abs(offset.X) >= len) || (Math.Abs(offset.Y) >= len) || (Math.Abs(offset.Z) >= len))
         {
             Reload(playerChunkPosition);
             return;
@@ -93,17 +94,17 @@ public class World
         int x, sx, off_x, end_x;
         int y, sy, off_y, end_y;
         int z, off_z, end_z;
-        
+
         //setup X
-        if(offset.X >= 0)
+        if (offset.X >= 0)
         {
             x = sx = 0;
             off_x = 1;
-            end_x = LoadedChunks.Length;
+            end_x = len;
         }
         else
         {
-            x = sx = LoadedChunks.Length - 1;
+            x = sx = len - 1;
             off_x = -1;
             end_x = -1;
         }
@@ -113,11 +114,11 @@ public class World
         {
             y = sy = 0;
             off_y = 1;
-            end_y = LoadedChunks.Length;
+            end_y = len;
         }
         else
         {
-            y = sy = LoadedChunks.Length - 1;
+            y = sy = len - 1;
             off_y = -1;
             end_y = -1;
         }
@@ -127,17 +128,16 @@ public class World
         {
             z = 0;
             off_z = 1;
-            end_z = LoadedChunks.Length;
+            end_z = len;
         }
         else
         {
-            z = LoadedChunks.Length - 1;
+            z = len - 1;
             off_z = -1;
             end_z = -1;
         }
 
         Position start = playerChunkPosition.SubtractAll(loadDistance);
-        int len = LoadedChunks.Length;
 
         while(z != end_z)
         {
@@ -152,7 +152,10 @@ public class World
                     else
                     {
                         if ((offset.X < 0 ? x - offset.X >= len : x - offset.X < 0) || (offset.Y < 0 ? y - offset.Y >= len : y - offset.Y < 0) || (offset.Z < 0 ? z - offset.Z >= len : z - offset.Z < 0))
-                            Chunk.SaveChunk(saveDir, LoadedChunks[x, y, z]);
+                        {
+                            GameObject.Destroy(LoadedChunks[x, y, z].ChunkObject); //remove game object
+                            Chunk.SaveChunk(saveDir, LoadedChunks[x, y, z]); //save chunk
+                        }
 
                         LoadedChunks[x, y, z] = LoadedChunks[x + offset.X, y + offset.Y, z + offset.Z];
                     }
@@ -222,9 +225,9 @@ public class World
         }
     }
 
-    public Chunk GetChunkFromFile(Position chunkPos)
+    private Chunk GetChunkFromFile(Position chunkPos)
     {
-        return Chunk.LoadChunk(saveDir, chunkPos, Seed);
+        return Chunk.LoadChunk(this, chunkPos, Seed);
     }
 
     /// <summary>

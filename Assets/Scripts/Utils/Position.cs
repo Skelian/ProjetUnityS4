@@ -66,6 +66,35 @@ public class Position
         return new Position(this.x * coef, this.y * coef, this.z * coef);
     }
 
+    public override string ToString()
+    {
+        return '[' + x.ToString() + ',' + y.ToString() + ',' + z.ToString() + ']';
+    }
+
+    public static bool operator!=(Position pos1, Position pos2)
+    {
+        return !((pos1.x == pos2.x) && (pos1.y == pos2.y) && (pos1.z == pos2.z));
+    }
+
+    public static bool operator== (Position pos1, Position pos2)
+    {
+        return ((pos1.x == pos2.x) && (pos1.y == pos2.y) && (pos1.z == pos2.z));
+    }
+
+    public override bool Equals(object obj)
+    {
+        var pos = obj as Position;
+        if (pos == null)
+            return false;
+
+        return ((x == pos.x) && (y == pos.y) && (z == pos.z));
+    }
+
+    public override int GetHashCode()
+    {
+        return (x * 31 + y) * 31 + z;
+    }
+
     /// <summary>
     /// Echange les coordonées des deux positions tel que toutes les coordonées
     /// de first soient inférieures aux coordonées de second
