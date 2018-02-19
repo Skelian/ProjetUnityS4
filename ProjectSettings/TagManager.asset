@@ -4,8 +4,16 @@
 TagManager:
   serializedVersion: 2
   tags:
-  - CubeOr
   - BlankObject
+  - DroppedIron
+  - DroppedLead
+  - DroppedMartianStone
+  - DroppedMoonStone
+  - DroppedO2
+  - DroppedOilOre
+  - DroppedSand
+  - DroppedTitanium
+  - DroppedUranium
   layers:
   - Default
   - TransparentFX
