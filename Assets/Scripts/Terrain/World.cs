@@ -235,7 +235,7 @@ public class World
     /// </summary>
     public void SaveLoadedChunks()
     {
-        foreach(Chunk chunk in LoadedChunks)
+        foreach (Chunk chunk in LoadedChunks)
             Chunk.SaveChunk(saveDir, chunk);
     }
 

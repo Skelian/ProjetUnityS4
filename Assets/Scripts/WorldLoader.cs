@@ -15,13 +15,14 @@ public class WorldLoader : MonoBehaviour {
         BlockDefManager.InitBlockDefinitions();
         BlockDefManager.BakeTextureAtlas();
 
+        Chunk.InitChunkObject();
+
         Settings.loadDistance = loadDistance;
 
         Save save = new Save("testSave");
         world = save.GetWorld(0, World.SEED_TEST_WORLD, player.transform.position);
 
-        world.SaveLoadedChunks();
-        Debug.Log("all chunks saved");
+        //world.GetChunk(new Position(0, 0, 0)).SetLocalBlockBatch(Block.AIR_BLOCK_ID, new Position(0, 14, 0), new Position(15, 15, 15));
 	}
 
     void Update()

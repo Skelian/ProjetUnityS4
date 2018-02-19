@@ -1,18 +1,24 @@
 ﻿using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 using UnityEngine;
 
 public class Chunk
 {
     /// <summary>
-    /// Monde dans lequel se trouve le chunk.
-    /// </summary>
-    public static World World { get; private set; }
-
-    /// <summary>
     /// Dimensions d'un chunk.
     /// </summary>
     public static int CHUNK_SIZE = 16; //total volume = CHUNK_SIZE ^ 3
+
+    /// <summary>
+    /// Dimension d'une région.
+    /// </summary>
+    public static int REGION_SIZE = 16; //n * n * n chunks par fichiers
+
+    /// <summary>
+    /// Monde dans lequel se trouve le chunk.
+    /// </summary>
+    public static World World { get; private set; }
 
     /// <summary>
     /// Coordonées du chunk.
@@ -20,17 +26,27 @@ public class Chunk
     public Position Position { get; private set; }
 
     /// <summary>
+    /// Vrai si le chunk est en train d'être sauvegardé.
+    /// </summary>
+    private bool beingSaved = false;
+
+    /// <summary>
+    /// Vrai si le chunk à été modifié depuis sa dernière sauvegarde
+    /// </summary>
+    private bool altered = true;
+
+    /// <summary>
     /// Blocs du chunk, recalculation de la mesh lors du changement de blocs
     /// </summary>
-    public Block[,,] blocks;
-    public Block[,,] Blocks
+    private Block[,,] blocks;
+    private Block[,,] Blocks
     {
         get
         {
             return blocks;
         }
 
-        private set
+        set
         {
             blocks = value;
             RecalculateMesh();
@@ -38,27 +54,70 @@ public class Chunk
     }
 
     public static GameObject BaseChunkObject = Resources.Load("Prefabs/BaseChunkObject") as GameObject;
+    public static void InitChunkObject()
+    {
+        Mesh mesh = new Mesh();
+
+        mesh.vertices = new Vector3[] {
+            new Vector3 (0, 0, 0),
+            new Vector3 (16, 0, 0),
+            new Vector3 (16, 16, 0),
+            new Vector3 (0, 16, 0),
+            new Vector3 (0, 16, 16),
+            new Vector3 (16, 16, 16),
+            new Vector3 (16, 0, 16),
+            new Vector3 (0, 0, 16),
+        };
+
+        mesh.triangles = new int[] {
+            0, 2, 1,
+            0, 3, 2,
+            2, 3, 4,
+            2, 4, 5,
+            1, 2, 5,
+            1, 5, 6,
+            0, 7, 4,
+            0, 4, 3,
+            5, 4, 7,
+            5, 7, 6,
+            0, 6, 7,
+            0, 1, 6
+        };
+
+        mesh.RecalculateBounds();
+        BaseChunkObject.GetComponent<MeshCollider>().sharedMesh = mesh;
+    }
 
     /// <summary>
     /// GameObject du chunk
     /// </summary>
     public GameObject ChunkObject { get; private set; }
+    private MeshFilter meshFilter;
+    private MeshCollider meshCollider;
+
+    private Chunk(World world, Position chunkPos)
+    {
+        Position = chunkPos;
+        World = world;
+        ChunkObject = InstantiateChunkObject(chunkPos);
+        meshFilter = ChunkObject.GetComponent<MeshFilter>();
+        meshCollider = ChunkObject.GetComponent<MeshCollider>();
+    }
 
     /// <summary>
-    /// Recalcule la mesh du chunk de façon synchrone.
+    /// Recalcule la mesh du chunk.
     /// </summary>
     public void RecalculateMesh()
     {
-        Mesh visualMesh = new Mesh();
         List<Vector3> verts = new List<Vector3>();
         List<Vector2> uvs = new List<Vector2>();
         List<int> tris = new List<int>();
 
-        for(int x = 0; x < CHUNK_SIZE; x++)
+        for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
         {
-            for(int y = 0; y < CHUNK_SIZE; y++)
+            for (int y = 0; y < Chunk.CHUNK_SIZE; y++)
             {
-                for(int z = 0; z < CHUNK_SIZE; z++)
+                for (int z = 0; z < Chunk.CHUNK_SIZE; z++)
                 {
                     Block block = Blocks[x, y, z];
 
@@ -89,19 +148,22 @@ public class Chunk
                     // arrière
                     if (IsBlockTransparent(x, y, z - 1))
                         BuildFace(block.Definition, new Vector3(x, y, z), Vector3.up, Vector3.right, true, verts, uvs, tris);
+
                 }
             }
         }
 
-        visualMesh.vertices = verts.ToArray();
-        visualMesh.uv = uvs.ToArray();
-        visualMesh.triangles = tris.ToArray();
+        Mesh mesh = meshFilter.mesh;
+        mesh.Clear();
 
-        visualMesh.RecalculateBounds();
-        visualMesh.RecalculateNormals();
+        mesh.vertices = verts.ToArray();
+        mesh.uv = uvs.ToArray();
+        mesh.triangles = tris.ToArray();
 
-        ChunkObject.GetComponent<MeshFilter>().mesh = visualMesh;
-        ChunkObject.GetComponent<MeshCollider>().sharedMesh = visualMesh;
+        mesh.RecalculateBounds();
+        mesh.RecalculateNormals();
+
+        meshCollider.sharedMesh = mesh;
     }
 
     /// <summary>
@@ -144,19 +206,12 @@ public class Chunk
 
     }
 
-    private Chunk(World world, Position chunkPos)
-    {
-        Position = chunkPos;
-        World = world;
-        ChunkObject = InstantiateChunkObject(chunkPos);
-    }
-
     /// <summary>
     /// Retourne vrai si le bloc indiqué est transparent, utilisé lors du calcul de la mesh du chunk.
     /// </summary>
     private bool IsBlockTransparent(int localPosX, int localPosY, int localPosZ)
     {
-        return (IsValid(localPosX, localPosY, localPosZ) ? Blocks[localPosX, localPosY, localPosZ].Definition.Transparent : true);
+        return (Chunk.IsValid(localPosX, localPosY, localPosZ) ? Blocks[localPosX, localPosY, localPosZ].Definition.Transparent : true);
     }
 
     /// <summary>
@@ -180,7 +235,10 @@ public class Chunk
             return false;
 
         Blocks[localXPos, localYpos, localZpos].Definition = definition;
+
+        altered = true;
         RecalculateMesh();
+
         return true;
     }
 
@@ -211,7 +269,9 @@ public class Chunk
                 for (z = localZpos_1; z < localZpos_2; z++)
                     Blocks[x, y, z].Definition = definition;
 
+        altered = true;
         RecalculateMesh();
+
         return true;
     }
 
@@ -235,7 +295,10 @@ public class Chunk
                 for (z = first.Z; z < second.Z; z++)
                     Blocks[x, y, z].Definition = definition;
 
+
         RecalculateMesh();
+        altered = true;
+
         return true;
     }
 
@@ -246,6 +309,15 @@ public class Chunk
                 return false;
 
         return true;
+    }
+
+    public Position GetRegionPosition()
+    {
+        return new Position(
+                                Mathf.FloorToInt(Position.X / Chunk.REGION_SIZE),
+                                Mathf.FloorToInt(Position.Y / Chunk.REGION_SIZE),
+                                Mathf.FloorToInt(Position.Z / Chunk.REGION_SIZE)
+                            );
     }
 
     /// <summary>
@@ -262,7 +334,7 @@ public class Chunk
         return chunkObject;
     }
 
-    private static bool IsValid(params int[] positions)
+    public static bool IsValid(params int[] positions)
     {
         foreach (int pos in positions)
             if ((pos < 0) || (pos >= CHUNK_SIZE))
@@ -271,7 +343,7 @@ public class Chunk
         return true;
     }
 
-    private static bool IsValid(params Position[] positions)
+    public static bool IsValid(params Position[] positions)
     {
         foreach (Position pos in positions)
             if (!IsValid(pos.X, pos.Y, pos.Z))
@@ -280,40 +352,47 @@ public class Chunk
         return true;
     }
 
-    public static bool SaveChunk(string saveFolder, Chunk chunk)
+    public static void SaveChunk(string saveFolder, Chunk chunk)
     {
-        string filePath = saveFolder + "[" + chunk.Position.X + "." + chunk.Position.Y + "." + chunk.Position.Z + "].chunk";
-        using (var writer = new BinaryWriter(File.Open(filePath, FileMode.Create)))
-        {
-            writer.Write(CHUNK_SIZE);
+        //si aucune modification apportée / si le chunk est déja en train d'être sauvegardé, pas la peine de sauvegarder.
+        if (!chunk.altered || chunk.beingSaved)
+            return;
 
-            int x, y, z, currentBlock = chunk.Blocks[0, 0, 0].ID, len = 0;
-            for (x = 0; x < CHUNK_SIZE; x++)
+        new Thread(() =>
+        {
+            string filePath = saveFolder + "[" + chunk.Position.X + "." + chunk.Position.Y + "." + chunk.Position.Z + "].chunk";
+            using (var writer = new BinaryWriter(File.Open(filePath, FileMode.Create)))
             {
-                for (y = 0; y < CHUNK_SIZE; y++)
+                writer.Write(CHUNK_SIZE);
+
+                int x, y, z, currentBlock = chunk.Blocks[0, 0, 0].ID, len = 0;
+                for (x = 0; x < CHUNK_SIZE; x++)
                 {
-                    for (z = 0; z < CHUNK_SIZE; z++)
+                    for (y = 0; y < CHUNK_SIZE; y++)
                     {
-                        if(chunk.Blocks[x, y, z].ID == currentBlock)
+                        for (z = 0; z < CHUNK_SIZE; z++)
                         {
-                            ++len;
-                        }
-                        else
-                        {
-                            writer.Write(len);
-                            writer.Write(currentBlock);
-                            len = 1;
-                            currentBlock = chunk.Blocks[x, y, z].ID;
+                            if (chunk.Blocks[x, y, z].ID == currentBlock)
+                            {
+                                ++len;
+                            }
+                            else
+                            {
+                                writer.Write(len);
+                                writer.Write(currentBlock);
+                                len = 1;
+                                currentBlock = chunk.Blocks[x, y, z].ID;
+                            }
                         }
                     }
                 }
+
+                writer.Write(len);
+                writer.Write(currentBlock);
             }
 
-            writer.Write(len);
-            writer.Write(currentBlock);
-        }
-
-        return true;
+            chunk.altered = false;
+        }).Start();
     }
 
     public static Chunk LoadChunk(World world, Position chunkPos, int seed)
@@ -337,18 +416,18 @@ public class Chunk
 
             int x = 0, y = 0, z = 0, len;
             bool filled = false;
-            while(!filled)
+            while (!filled)
             {
                 len = reader.ReadInt32();
                 BlockDef definition = BlockDefManager.GetBlockDef(reader.ReadInt32());
 
-                while(len-- > 0)
+                while (len-- > 0)
                 {
                     blocks[x, y, z] = new Block(definition, globalChunkPos.Add(x, y, z), newChunk);
-                    if(z >= 15)
+                    if (z >= 15)
                     {
                         z = 0;
-                        if(y >= 15)
+                        if (y >= 15)
                         {
                             y = 0;
                             if (x >= 15)
@@ -372,6 +451,7 @@ public class Chunk
         }
 
         newChunk.Blocks = blocks;
+        newChunk.altered = false;
         return newChunk;
     }
 

@@ -66,6 +66,16 @@ public class Position
         return new Position(this.x * coef, this.y * coef, this.z * coef);
     }
 
+    public Position Div(int coefX, int coefY, int coefZ)
+    {
+        return new Position(this.x / coefX, this.y / coefY, this.z / coefZ);
+    }
+
+    public Position DivAll(int coef)
+    {
+        return new Position(this.x / coef, this.y / coef, this.z / coef);
+    }
+
     public override string ToString()
     {
         return '[' + x.ToString() + ',' + y.ToString() + ',' + z.ToString() + ']';
