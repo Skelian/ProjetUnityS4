@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using Simplex;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using UnityEngine;
@@ -18,7 +19,7 @@ public class Chunk
     /// <summary>
     /// Monde dans lequel se trouve le chunk.
     /// </summary>
-    public static World World { get; private set; }
+    public World World { get; private set; }
 
     /// <summary>
     /// Coordonées du chunk.
@@ -39,14 +40,14 @@ public class Chunk
     /// Blocs du chunk, recalculation de la mesh lors du changement de blocs
     /// </summary>
     private Block[,,] blocks;
-    private Block[,,] Blocks
+    public Block[,,] Blocks
     {
         get
         {
             return blocks;
         }
 
-        set
+        private set
         {
             blocks = value;
             RecalculateMesh();
@@ -153,8 +154,7 @@ public class Chunk
             }
         }
 
-        Mesh mesh = meshFilter.mesh;
-        mesh.Clear();
+        Mesh mesh = new Mesh();
 
         mesh.vertices = verts.ToArray();
         mesh.uv = uvs.ToArray();
@@ -163,6 +163,7 @@ public class Chunk
         mesh.RecalculateBounds();
         mesh.RecalculateNormals();
 
+        meshFilter.mesh = mesh;
         meshCollider.sharedMesh = mesh;
     }
 
@@ -215,6 +216,22 @@ public class Chunk
     }
 
     /// <summary>
+    /// Vrai si le block à la position indiqué est présent dans le chunk.
+    /// </summary>
+    public bool IsPresentInChunk(Position blockPos)
+    {
+        return (EntityUtils.GetChunkPosition(blockPos) == Position);
+    }
+
+    /// <summary>
+    /// Retourne le block présent aux coordonées globales (si présent dans ce chunk).
+    /// </summary>
+    public Block GetBlock(Position blockPos)
+    {
+        return IsPresentInChunk(blockPos) ? blocks[blockPos.X % CHUNK_SIZE, blockPos.Y % CHUNK_SIZE, blockPos.Z % CHUNK_SIZE] : null;
+    }
+
+    /// <summary>
     /// Retourne le bloc présent aux coordonées locales indiquées (0 à 15).
     /// </summary>
     public Block GetLocalBlock(int localXPos, int localYpos, int localZpos)
@@ -223,18 +240,18 @@ public class Chunk
     }
 
     /// <summary>
-    /// Remplace le bloc présent aux coordonées locales indiquées (0 à 15).
+    /// Remplace le bloc présent aux coordonées indiquées.
     /// </summary>
-    public bool SetLocalBlock(int id, int localXPos, int localYpos, int localZpos)
+    public bool SetLocalBlock(int id, Position localBlockPos)
     {
-        if (!IsValid(localXPos, localYpos, localZpos))
+        if (!IsValid(localBlockPos))
             return false;
 
         BlockDef definition = BlockDefManager.GetBlockDef(id);
         if (definition == null)
             return false;
 
-        Blocks[localXPos, localYpos, localZpos].Definition = definition;
+        Blocks[localBlockPos.X, localBlockPos.Y, localBlockPos.Z].Definition = definition;
 
         altered = true;
         RecalculateMesh();
@@ -243,61 +260,27 @@ public class Chunk
     }
 
     /// <summary>
-    /// Remplace les blocs présents entre les deux coordonées locales indiquées (0 à 15).
-    /// </summary>
-    public bool SetLocalBlockBatch(int id, int localXpos_1, int localXpos_2, int localYpos_1, int localYpos_2, int localZpos_1, int localZpos_2)
-    {
-        if (!IsValid(localXpos_1, localXpos_2, localYpos_1, localYpos_2, localZpos_1, localZpos_2))
-            return false;
-
-        BlockDef definition = BlockDefManager.GetBlockDef(id);
-        if (definition == null)
-            return false;
-
-        if (localXpos_1 > localXpos_2)
-            Utils.Swap(ref localXpos_1, ref localXpos_2);
-
-        if (localYpos_1 > localYpos_2)
-            Utils.Swap(ref localYpos_1, ref localYpos_2);
-
-        if (localZpos_1 > localZpos_2)
-            Utils.Swap(ref localZpos_1, ref localZpos_2);
-
-        int x, y, z;
-        for (x = localXpos_1; x < localYpos_2; x++)
-            for (y = localYpos_1; y < localYpos_2; y++)
-                for (z = localZpos_1; z < localZpos_2; z++)
-                    Blocks[x, y, z].Definition = definition;
-
-        altered = true;
-        RecalculateMesh();
-
-        return true;
-    }
-
-    /// <summary>
-    /// Remplace les blocs présents entre les deux coordonées locales indiquées (0 à 15).
+    /// Remplace les blocs présents entre les deux coordonées locales indiquées.
     /// </summary>
     public bool SetLocalBlockBatch(int id, Position first, Position second)
     {
         if (!IsValid(first, second))
             return false;
 
-        BlockDef definition = BlockDefManager.GetBlockDef(id);
-        if (definition == null)
+        BlockDef newDef = BlockDefManager.GetBlockDef(id);
+        if (newDef == null)
             return false;
 
         Position.Smooth(first, second);
 
-        int x, y, z;
-        for (x = first.X; x < second.X; x++)
-            for (y = first.Y; y < second.Y; y++)
-                for (z = first.Z; z < second.Z; z++)
-                    Blocks[x, y, z].Definition = definition;
+        for (int x = first.X; x <= second.X; x++)
+            for (int y = first.Y; y <= second.Y; y++)
+                for (int z = first.Z; z <= second.Z; z++)
+                    Blocks[x, y, z].Definition = newDef;
 
 
-        RecalculateMesh();
         altered = true;
+        RecalculateMesh();
 
         return true;
     }
@@ -397,10 +380,10 @@ public class Chunk
 
     public static Chunk LoadChunk(World world, Position chunkPos, int seed)
     {
-        if (!Directory.Exists(world.saveDir))
+        if (!Directory.Exists(world.SaveDir))
             return null;
 
-        string filePath = world.saveDir + "[" + chunkPos.X + "." + chunkPos.Y + "." + chunkPos.Z + "].chunk";
+        string filePath = world.SaveDir + "[" + chunkPos.X + "." + chunkPos.Y + "." + chunkPos.Z + "].chunk";
 
         if (!File.Exists(filePath))
             return CreateChunk(world, chunkPos, seed);
@@ -493,11 +476,79 @@ public class Chunk
         //test flat world
         if (seed == World.SEED_TEST_WORLD)
         {
-            return chunkPos.Y == 0 ? NewFilledChunk(world, chunkPos, 1) : NewEmptyChunk(world, chunkPos);
+            return chunkPos.Y <= 0 ? NewChunkUsingSeed(world, chunkPos, 1) : NewEmptyChunk(world, chunkPos);
         }
 
         //temporary
         return NewEmptyChunk(world, chunkPos);
+    }
+
+    /**
+    private static Chunk NewChunkUsingSeed(World world, Position position, int seed)
+    {
+        Block[,,] blocks = new Block[CHUNK_SIZE, CHUNK_SIZE, CHUNK_SIZE];
+        Chunk chunk = new Chunk(world, position);
+        Position globalChunkPos = position.MultAll(CHUNK_SIZE);
+
+        int x, y, z;
+        for (x = 0; x < CHUNK_SIZE; x++)
+            for (y = 0; y < CHUNK_SIZE; y++)
+                for (z = 0; z < CHUNK_SIZE; z++) {
+                    float value = Random.value;
+                    blocks[x, y, z] = new Block(BlockDefManager.GetBlockDef(value > 0.3f ? value < 0.7f ? 1 : 2 : 102), globalChunkPos.Add(x, y, z), chunk);
+                }
+
+        chunk.Blocks = blocks;
+        return chunk;
+    }
+    **/
+
+    private static Chunk NewChunkUsingSeed(World world, Position position, int seed)
+    {
+        Block[,,] blocks = new Block[CHUNK_SIZE, CHUNK_SIZE, CHUNK_SIZE];
+        Chunk chunk = new Chunk(world, position);
+        Position globalChunkPos = position.MultAll(CHUNK_SIZE);
+
+        int x, y, z;
+        for (x = 0; x < CHUNK_SIZE; x++)
+            for (y = 0; y < CHUNK_SIZE; y++)
+                for (z = 0; z < CHUNK_SIZE; z++)
+                    blocks[x, y, z] = new Block(BlockDefManager.GetBlockDef(GetBlockId(new Vector3(x, y, z))), globalChunkPos.Add(x, y, z), chunk);
+
+        chunk.Blocks = blocks;
+        return chunk;
+    }
+
+    private static int GetBlockId(Vector3 pos)
+    {
+        float heightBase = 10;
+        float maxHeight = CHUNK_SIZE - 10;
+        float heightSwing = maxHeight - heightBase;
+
+        float clusterValue = CalculateNoiseValue(pos, new Vector3(Random.value * 10000, Random.value * 10000, Random.value * 10000), 0.02f);
+        float blobValue = CalculateNoiseValue(pos, new Vector3(Random.value * 10000, Random.value * 10000, Random.value * 10000), 0.05f);
+        float mountainValue = CalculateNoiseValue(pos, new Vector3(Random.value * 10000, Random.value * 10000, Random.value * 10000), 0.009f);
+
+        mountainValue = Mathf.Sqrt(mountainValue);
+
+        mountainValue *= heightSwing;
+        mountainValue += heightBase;
+
+        mountainValue += (blobValue * 10) - 5f;
+
+        if (mountainValue >= pos.y)
+            return 2;
+
+        return 0;
+    }
+
+    public static float CalculateNoiseValue(Vector3 pos, Vector3 offset, float scale)
+    {
+        float noiseX = Mathf.Abs((pos.x + offset.x) * scale);
+        float noiseY = Mathf.Abs((pos.y + offset.y) * scale);
+        float noiseZ = Mathf.Abs((pos.z + offset.z) * scale);
+
+        return Mathf.Max(0, Noise.Generate(noiseX, noiseY, noiseZ));
     }
 
 }

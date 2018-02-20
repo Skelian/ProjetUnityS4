@@ -1,11 +1,9 @@
-﻿using UnityEngine;
-
-public class Block
+﻿public class Block
 {
     public static int AIR_BLOCK_ID = 0;
 
     public BlockDef Definition { get; set; }
-    public Chunk Chunk { get; private set; }
+    public Chunk ParentChunk { get; private set; }
     public Position Position { get; private set; }
 
     public int ID
@@ -18,9 +16,16 @@ public class Block
 
     public Block(BlockDef definition, Position globalPosition, Chunk parent)
     {
-        this.Definition = definition;
-        this.Chunk = parent;
-        this.Position = globalPosition;
+        Definition = definition;
+        ParentChunk = parent;
+        Position = globalPosition;
+    }
+
+    public Block getNearBlock(Utils.Face face)
+    {
+        Position pos = Position.NearPosition(face);
+        Chunk chunk = ParentChunk.World.GetLoadedChunk(EntityUtils.GetChunkPosition(pos));
+        return (chunk != null ? chunk.GetBlock(pos) : null);
     }
 
 }

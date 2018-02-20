@@ -76,9 +76,88 @@ public class Position
         return new Position(this.x / coef, this.y / coef, this.z / coef);
     }
 
+    public bool AnySupEqTo(int value)
+    {
+        return ((x >= value) || (y >= value) || (z >= value));
+    }
+
+    public bool AllSupEqTo(int value)
+    {
+        return ((x >= value) && (y >= value) && (z >= value));
+    }
+
+    public bool AnySupTo(int value)
+    {
+        return ((x > value) || (y > value) || (z > value));
+    }
+
+    public bool AllSupTo(int value)
+    {
+        return ((x > value) && (y > value) && (z > value));
+    }
+
+    public bool AnyInfEqTo(int value)
+    {
+        return ((x <= value) || (y <= value) || (z <= value));
+    }
+
+    public bool AllInfEqTo(int value)
+    {
+        return ((x <= value) && (y <= value) && (z <= value));
+    }
+
+    public bool AnyInfTo(int value)
+    {
+        return ((x < value) || (y < value) || (z < value));
+    }
+
+    public bool AllInfTo(int value)
+    {
+        return ((x < value) && (y < value) && (z < value));
+    }
+
     public override string ToString()
     {
         return '[' + x.ToString() + ',' + y.ToString() + ',' + z.ToString() + ']';
+    }
+
+    public Position CopyOf()
+    {
+        return new Position(x, y, z);
+    }
+
+    public Position NearPosition(Utils.Face face)
+    {
+        Position pos = CopyOf();
+
+        switch(face)
+        {
+            case Utils.Face.UP:
+                ++pos.y;
+                break;
+
+            case Utils.Face.DOWN:
+                --pos.y;
+                break;
+
+            case Utils.Face.NORTH:
+                ++pos.x;
+                break;
+
+            case Utils.Face.SOUTH:
+                --pos.x;
+                break;
+
+            case Utils.Face.EAST:
+                ++pos.z;
+                break;
+
+            case Utils.Face.WEST:
+                --pos.z;
+                break;
+        }
+
+        return pos;
     }
 
     public static bool operator!=(Position pos1, Position pos2)
@@ -93,10 +172,10 @@ public class Position
 
     public override bool Equals(object obj)
     {
-        var pos = obj as Position;
-        if (pos == null)
+        if ((obj == null) || (obj.GetType() != typeof(Position)))
             return false;
 
+        var pos = obj as Position;
         return ((x == pos.x) && (y == pos.y) && (z == pos.z));
     }
 
