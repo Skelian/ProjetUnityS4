@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 using UnityEngine;
 
 public class World
@@ -14,19 +15,14 @@ public class World
     public int Seed { get; private set; }
 
     /// <summary>
-    /// Chunks chargés en mémoire.
-    /// </summary>
-    public Chunk[,,] LoadedChunks { get; private set; }
-
-    /// <summary>
     /// Chunk central chargé en mémoire.
     /// </summary>
-    public Chunk CenterChunk { get; private set; }
+    public Position CenterChunkPosition { get; private set; }
 
     /// <summary>
     /// Repertoire ou sont stockés les fichiers de chunks.
     /// </summary>
-    public string saveDir { get; private set; }
+    public string SaveDir { get; private set; }
 
     private int loadDistance;
     /// <summary>
@@ -44,7 +40,7 @@ public class World
             if (value > 0)
             {
                 loadDistance = value;
-                Reload(CenterChunk.Position, false);
+                Reload(CenterChunkPosition, false);
             }
         }
     }
@@ -66,112 +62,65 @@ public class World
         this.Seed = seed;
         this.loadDistance = loadDistance;
 
-        saveDir = save.GetWorldDir(dimensionID) + "chunks/";
-        if (!Directory.Exists(saveDir))
-            Directory.CreateDirectory(saveDir);
+        SaveDir = save.GetWorldDir(dimensionID) + "chunks/";
+        if (!Directory.Exists(SaveDir))
+            Directory.CreateDirectory(SaveDir);
 
         Reload(EntityUtils.GetChunkPosition(playerPosition), false);
     }
+
+
+    /// <summary>
+    /// Chunks chargés en mémoire.
+    /// </summary>
+    public Dictionary<Position, Chunk> LoadedChunks = new Dictionary<Position, Chunk>();
+    public Queue<Position> chunksToLoad = new Queue<Position>();
 
     /// <summary>
     /// Met à jour les chunks chargés.
     /// </summary>
     public void Update(Vector3 playerPosition)
     {
+        if(chunksToLoad.Count > 0)
+        {
+            Position pos = chunksToLoad.Dequeue();
+            LoadedChunks.Add(pos, GetChunkFromFile(pos));
+        }
+
         Position playerChunkPosition = EntityUtils.GetChunkPosition(playerPosition);
-        if (playerChunkPosition == CenterChunk.Position)
+        if (playerChunkPosition == CenterChunkPosition)
             return;
 
-        int len = LoadedChunks.GetLength(0);
-
-        Position offset = Position.OffsetBetween(CenterChunk.Position, playerChunkPosition);
-        if((Math.Abs(offset.X) >= len) || (Math.Abs(offset.Y) >= len) || (Math.Abs(offset.Z) >= len))
+        /// delete chunks.
+        foreach(Chunk chunk in new List<Chunk>(LoadedChunks.Values))
         {
-            Reload(playerChunkPosition);
-            return;
-        }
-
-        int x, sx, off_x, end_x;
-        int y, sy, off_y, end_y;
-        int z, off_z, end_z;
-
-        //setup X
-        if (offset.X >= 0)
-        {
-            x = sx = 0;
-            off_x = 1;
-            end_x = len;
-        }
-        else
-        {
-            x = sx = len - 1;
-            off_x = -1;
-            end_x = -1;
-        }
-
-        //setup Y
-        if (offset.Y >= 0)
-        {
-            y = sy = 0;
-            off_y = 1;
-            end_y = len;
-        }
-        else
-        {
-            y = sy = len - 1;
-            off_y = -1;
-            end_y = -1;
-        }
-
-        //setup Z
-        if (offset.Z >= 0)
-        {
-            z = 0;
-            off_z = 1;
-            end_z = len;
-        }
-        else
-        {
-            z = len - 1;
-            off_z = -1;
-            end_z = -1;
+            if (Position.DistanceBetween(chunk.Position, playerChunkPosition).AnySupTo(loadDistance))
+            {
+                LoadedChunks.Remove(chunk.Position);
+                Chunk.SaveChunk(SaveDir, chunk);
+                GameObject.Destroy(chunk.ChunkObject);
+            }
         }
 
         Position start = playerChunkPosition.SubtractAll(loadDistance);
+        Position end = playerChunkPosition.AddAll(loadDistance);
 
-        while(z != end_z)
+        //load chunks
+        for (int x = start.X; x <= end.X; x++)
         {
-            while(y != end_y)
+            for (int y = start.Y; y <= end.Y; y++)
             {
-                while(x != end_x)
+                for (int z = start.Z; z <= end.Z; z++)
                 {
-                    if ((x + offset.X < 0) || (x + offset.X >= len) || (y + offset.Y < 0) || (y + offset.Y >= len) || (z + offset.Z < 0) || (z + offset.Z >= len))
-                    {
-                        LoadedChunks[x, y, z] = GetChunkFromFile(start.Add(x, y, z));
-                    }
-                    else
-                    {
-                        if ((offset.X < 0 ? x - offset.X >= len : x - offset.X < 0) || (offset.Y < 0 ? y - offset.Y >= len : y - offset.Y < 0) || (offset.Z < 0 ? z - offset.Z >= len : z - offset.Z < 0))
-                        {
-                            GameObject.Destroy(LoadedChunks[x, y, z].ChunkObject); //remove game object
-                            Chunk.SaveChunk(saveDir, LoadedChunks[x, y, z]); //save chunk
-                        }
+                    Position tmp = new Position(x, y, z);
 
-                        LoadedChunks[x, y, z] = LoadedChunks[x + offset.X, y + offset.Y, z + offset.Z];
-                    }
-
-                    x += off_x;
+                    if (!IsChunkLoaded(tmp) && !chunksToLoad.Contains(tmp))
+                        chunksToLoad.Enqueue(tmp);
                 }
-
-                x = sx;
-                y += off_y;
             }
-
-            y = sy;
-            z += off_z;
         }
 
-        CenterChunk = LoadedChunks[loadDistance, loadDistance, loadDistance];
+
     }
 
     /// <summary>
@@ -179,21 +128,29 @@ public class World
     /// </summary>
     public void Reload(Position centerChunkPosition, bool save = true)
     {
+        this.CenterChunkPosition = centerChunkPosition;
+
         if(save)
             SaveLoadedChunks();
 
-        int tmp = loadDistance * 2 + 1;
-        LoadedChunks = new Chunk[tmp, tmp, tmp];
+        LoadedChunks.Clear();
+        chunksToLoad.Clear();
 
         Position start = centerChunkPosition.SubtractAll(loadDistance);
+        Position end = centerChunkPosition.AddAll(loadDistance);
 
-        int x, y, z;
-        for (x = 0; x < tmp; x++)
-            for (y = 0; y < tmp; y++)
-                for (z = 0; z < tmp; z++)
-                    LoadedChunks[x, y, z] = GetChunkFromFile(start.Add(x, y, z));
-
-        CenterChunk = LoadedChunks[loadDistance, loadDistance, loadDistance];
+        //load chunks
+        for (int x = start.X; x <= end.X; x++)
+        {
+            for (int y = start.Y; y <= end.Y; y++)
+            {
+                for (int z = start.Z; z <= end.Z; z++)
+                {
+                    Position tmp = new Position(x, y, z);
+                    LoadedChunks.Add(tmp, GetChunkFromFile(tmp));
+                }
+            }
+        }
     }
 
     /// <summary>
@@ -201,28 +158,15 @@ public class World
     /// </summary>
     public bool IsChunkLoaded(Position ChunkPos)
     {
-        Position distance = Position.DistanceBetween(CenterChunk.Position, ChunkPos);
-        return ((distance.X <= loadDistance) && (distance.Y <= loadDistance) && (distance.Z <= loadDistance));
+        return LoadedChunks.ContainsKey(ChunkPos);
     }
 
     /// <summary>
     /// Retourne le chunk présent aux coordonées indiquées.
     /// </summary>
-    /// <param name="deep">Recherche le chunk dans la sauvegarde s'il n'est pas chargé.</param>
-    public Chunk GetChunk(Position chunkPos, bool deep = false)
+    public Chunk GetLoadedChunk(Position chunkPos)
     {
-        if (IsChunkLoaded(chunkPos))
-        {
-            int centerIndex = loadDistance + 1;
-            return LoadedChunks[centerIndex + CenterChunk.Position.X - chunkPos.X, centerIndex + CenterChunk.Position.Y - chunkPos.Y, centerIndex + CenterChunk.Position.Z - chunkPos.Z];
-        }
-        else
-        {
-            if (deep)
-                return GetChunkFromFile(chunkPos);
-            else
-                return null;
-        }
+        return (IsChunkLoaded(chunkPos) ? LoadedChunks[chunkPos] : null);
     }
 
     private Chunk GetChunkFromFile(Position chunkPos)
@@ -235,8 +179,8 @@ public class World
     /// </summary>
     public void SaveLoadedChunks()
     {
-        foreach (Chunk chunk in LoadedChunks)
-            Chunk.SaveChunk(saveDir, chunk);
+        foreach (Chunk chunk in LoadedChunks.Values)
+            Chunk.SaveChunk(SaveDir, chunk);
     }
 
 }

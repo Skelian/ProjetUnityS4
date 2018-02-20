@@ -11,4 +11,9 @@ public class Utils
         b = tmp;
     }
 
+    public enum Face
+    {
+        UP, DOWN, NORTH, EAST, WEST, SOUTH
+    }
+
 }
