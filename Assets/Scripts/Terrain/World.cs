@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
-using System.Threading;
 using UnityEngine;
 
 public class World
@@ -57,6 +55,7 @@ public class World
 
     public World(Save save, int dimensionID, int loadDistance, Vector3 playerPosition, int seed)
     {
+        Random.InitState(seed);
         this.ParentSave = save;
         this.DimensionID = dimensionID;
         this.Seed = seed;

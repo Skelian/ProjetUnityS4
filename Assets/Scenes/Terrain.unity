@@ -340,4 +340,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fa6ad2a89bcaef04cb6ac08f48e3f8a1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  nbBlankObject: 0
+  nbIron: 0
+  nbLead: 0
+  nbMartianStone: 0
+  nbMoonStone: 0
+  nbO2: 0
+  nbOilOre: 0
+  nbSand: 0
+  nbTitanium: 0
+  nbUranium: 0

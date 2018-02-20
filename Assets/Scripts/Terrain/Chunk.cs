@@ -476,15 +476,17 @@ public class Chunk
         //test flat world
         if (seed == World.SEED_TEST_WORLD)
         {
-            return chunkPos.Y <= 0 ? NewChunkUsingSeed(world, chunkPos, 1) : NewEmptyChunk(world, chunkPos);
+            return chunkPos.Y <= 0 ? NewTestChunk(world, chunkPos) : NewEmptyChunk(world, chunkPos);
         }
 
         //temporary
+
+        if(chunkPos.Y <= 0)
+            return NewChunkUsingSeed(world, chunkPos);
         return NewEmptyChunk(world, chunkPos);
     }
 
-    /**
-    private static Chunk NewChunkUsingSeed(World world, Position position, int seed)
+    private static Chunk NewTestChunk(World world, Position position)
     {
         Block[,,] blocks = new Block[CHUNK_SIZE, CHUNK_SIZE, CHUNK_SIZE];
         Chunk chunk = new Chunk(world, position);
@@ -501,54 +503,31 @@ public class Chunk
         chunk.Blocks = blocks;
         return chunk;
     }
-    **/
 
-    private static Chunk NewChunkUsingSeed(World world, Position position, int seed)
+    private static Chunk NewChunkUsingSeed(World world, Position position)
     {
         Block[,,] blocks = new Block[CHUNK_SIZE, CHUNK_SIZE, CHUNK_SIZE];
         Chunk chunk = new Chunk(world, position);
         Position globalChunkPos = position.MultAll(CHUNK_SIZE);
 
-        int x, y, z;
-        for (x = 0; x < CHUNK_SIZE; x++)
-            for (y = 0; y < CHUNK_SIZE; y++)
-                for (z = 0; z < CHUNK_SIZE; z++)
-                    blocks[x, y, z] = new Block(BlockDefManager.GetBlockDef(GetBlockId(new Vector3(x, y, z))), globalChunkPos.Add(x, y, z), chunk);
+        Vector3 offset = new Vector3(Random.value * 10000, Random.value * 10000, Random.value * 10000);
+
+        for (int x = 0; x < CHUNK_SIZE; x++)
+        {
+            for (int y = 0; y < CHUNK_SIZE; y++)
+            {
+                for (int z = 0; z < CHUNK_SIZE; z++)
+                {
+                    Position blockPos = globalChunkPos.Add(x, y, z);
+
+                    float noiseValue = Noise.Generate(blockPos.X, blockPos.Y, blockPos.Z);
+                    blocks[x, y, z] = new Block(BlockDefManager.GetBlockDef(noiseValue > 0.5f ? 1 : 0), blockPos, chunk);
+                }
+            }
+        }
 
         chunk.Blocks = blocks;
         return chunk;
-    }
-
-    private static int GetBlockId(Vector3 pos)
-    {
-        float heightBase = 10;
-        float maxHeight = CHUNK_SIZE - 10;
-        float heightSwing = maxHeight - heightBase;
-
-        float clusterValue = CalculateNoiseValue(pos, new Vector3(Random.value * 10000, Random.value * 10000, Random.value * 10000), 0.02f);
-        float blobValue = CalculateNoiseValue(pos, new Vector3(Random.value * 10000, Random.value * 10000, Random.value * 10000), 0.05f);
-        float mountainValue = CalculateNoiseValue(pos, new Vector3(Random.value * 10000, Random.value * 10000, Random.value * 10000), 0.009f);
-
-        mountainValue = Mathf.Sqrt(mountainValue);
-
-        mountainValue *= heightSwing;
-        mountainValue += heightBase;
-
-        mountainValue += (blobValue * 10) - 5f;
-
-        if (mountainValue >= pos.y)
-            return 2;
-
-        return 0;
-    }
-
-    public static float CalculateNoiseValue(Vector3 pos, Vector3 offset, float scale)
-    {
-        float noiseX = Mathf.Abs((pos.x + offset.x) * scale);
-        float noiseY = Mathf.Abs((pos.y + offset.y) * scale);
-        float noiseZ = Mathf.Abs((pos.z + offset.z) * scale);
-
-        return Mathf.Max(0, Noise.Generate(noiseX, noiseY, noiseZ));
     }
 
 }

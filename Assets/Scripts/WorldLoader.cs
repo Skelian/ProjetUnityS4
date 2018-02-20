@@ -17,6 +17,7 @@ public class WorldLoader : MonoBehaviour
         Settings.loadDistance = loadDistance;
 
         Save save = new Save("testSave");
+        int seed = 66656599;
         world = save.GetWorld(0, World.SEED_TEST_WORLD, player.transform.position);
 
         world.GetLoadedChunk(new Position(0, 0, 0)).SetLocalBlockBatch(103, new Position(0, 0, 0), new Position(15, 15, 15));
