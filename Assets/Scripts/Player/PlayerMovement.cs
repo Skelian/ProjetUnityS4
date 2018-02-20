@@ -4,16 +4,16 @@ using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour {
 
-	public float speed, jumpForce;
+	public float speed, maxJumpSpeed, jumpForce;
+	public GameObject tete;
 
 
 	private float mh, mv;
 	private Vector3 jump;
 	private Animator ator;
-
 	private Rigidbody rb;
 
-	[SerializeField] bool auSol;
+	[SerializeField] public bool auSol;
 
 	// Use this for initialization
 	void Start () {
@@ -30,6 +30,7 @@ public class PlayerMovement : MonoBehaviour {
 	void Update () {
 		transform.Rotate (0, Input.GetAxis ("Mouse X") * 5f, 0);
 
+
 		mv = Input.GetAxis ("Vertical");
 		mh = Input.GetAxis ("Horizontal");
 
@@ -41,27 +42,45 @@ public class PlayerMovement : MonoBehaviour {
 		}
 		if (mh != 0){
 			transform.Translate (mh * transform.right * speed, Space.World);
+			ator.SetBool ("walking", true);
 		}
 			
 		//Si le joueur saute
 		if (Input.GetAxis ("Jump") > 0 && auSol) {
-			rb.AddForce (jump * jumpForce, ForceMode.Impulse);
+			float finalForce = Mathf.Clamp (1.5f * jumpForce, 1.5f, maxJumpSpeed);
+			rb.AddForce (new Vector3(0, finalForce, 0), ForceMode.Impulse);
 			//Le joueur n'est donc plus sur le sol
 			auSol = false;
 		}
-
-			
 	}
 
-	void OnCollisionEnter(Collision co){
-		if (co.gameObject.tag == "Block") {
-			rb.velocity = Vector3.zero;
-			rb.angularVelocity = Vector3.zero;
+	void OnCollisionStay(Collision co){
+		if (Vector3.Dot (co.contacts [0].normal, new Vector3 (1, 0, 1)) == 0) {
+			auSol = true;
 		}
 	}
 
-	//Le joueur est au sol
-	void OnCollisionStay(){
-		auSol = true;
+	void FixedUpdate(){
+		RotateCameraY ();
+	}
+
+	float NegativeEuler(float angle){
+		return (angle > 180) ? angle - 360 : angle;
+	}
+
+	void RotateCameraY(){
+		int up = 65, down = -70;
+		// Si t'es l'angle de rotation de la tete est copmprise entre les valeurs desirées
+		if (NegativeEuler(tete.transform.rotation.eulerAngles.z) < up && NegativeEuler(tete.transform.rotation.eulerAngles.z) > down) {
+			if(Input.GetAxis ("Mouse Y") != 0)
+				tete.transform.Rotate (0, 0, ((Input.GetAxis ("Mouse Y") < 0) ? -0.1f : 0.1f) * 25f);
+		} else if (NegativeEuler(tete.transform.rotation.eulerAngles.z) > up) {
+			if(Input.GetAxis ("Mouse Y") != 0)
+				tete.transform.Rotate (0, 0, ((Input.GetAxis ("Mouse Y") < 0) ? -0.1f : 0f) * 25f);
+
+		} else if (NegativeEuler(tete.transform.rotation.eulerAngles.z) < down) {
+			if(Input.GetAxis ("Mouse Y") != 0)
+				tete.transform.Rotate (0, 0, ((Input.GetAxis ("Mouse Y")> 0) ? 0.1f : 0f) * 25f);
+		}
 	}
 }
