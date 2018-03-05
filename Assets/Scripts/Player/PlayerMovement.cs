@@ -55,7 +55,6 @@ public class PlayerMovement : MonoBehaviour {
 	}
 
 	void OnCollisionStay(Collision co){
-		Debug.Log (co.contacts [0].normal);
 		if (co.contacts [0].normal == new Vector3(0,1,0)) {
 			auSol = true;
 		}
