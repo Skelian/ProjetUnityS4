@@ -7,8 +7,6 @@ using UnityEngine;
 public class dragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
 {
 	public static GameObject item;    // i changed itembeigdraged to item.
-
-
 	public static Transform startParent;
 	Vector3 startPosition;
 	bool start = true;

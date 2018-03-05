@@ -56,6 +56,8 @@ public class World
     public World(Save save, int dimensionID, int loadDistance, Vector3 playerPosition, int seed)
     {
         Random.InitState(seed);
+        Simplex.Noise.Seed = seed;
+
         this.ParentSave = save;
         this.DimensionID = dimensionID;
         this.Seed = seed;
@@ -90,7 +92,7 @@ public class World
         if (playerChunkPosition == CenterChunkPosition)
             return;
 
-        /// delete chunks.
+        //delete chunks.
         foreach(Chunk chunk in new List<Chunk>(LoadedChunks.Values))
         {
             if (Position.DistanceBetween(chunk.Position, playerChunkPosition).AnySupTo(loadDistance))
@@ -104,7 +106,7 @@ public class World
         Position start = playerChunkPosition.SubtractAll(loadDistance);
         Position end = playerChunkPosition.AddAll(loadDistance);
 
-        //load chunks
+        //load chunks.
         for (int x = start.X; x <= end.X; x++)
         {
             for (int y = start.Y; y <= end.Y; y++)
@@ -118,8 +120,6 @@ public class World
                 }
             }
         }
-
-
     }
 
     /// <summary>
@@ -133,6 +133,10 @@ public class World
             SaveLoadedChunks();
 
         LoadedChunks.Clear();
+
+        foreach (Chunk chunk in LoadedChunks.Values)
+            GameObject.Destroy(chunk.ChunkObject);
+
         chunksToLoad.Clear();
 
         Position start = centerChunkPosition.SubtractAll(loadDistance);
