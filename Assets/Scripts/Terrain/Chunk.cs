@@ -510,8 +510,6 @@ public class Chunk
         Chunk chunk = new Chunk(world, position);
         Position globalChunkPos = position.MultAll(CHUNK_SIZE);
 
-        Vector3 offset = new Vector3(Random.value * 10000, Random.value * 10000, Random.value * 10000);
-
         for (int x = 0; x < CHUNK_SIZE; x++)
         {
             for (int y = 0; y < CHUNK_SIZE; y++)
@@ -519,9 +517,9 @@ public class Chunk
                 for (int z = 0; z < CHUNK_SIZE; z++)
                 {
                     Position blockPos = globalChunkPos.Add(x, y, z);
-
-                    float noiseValue = Noise.Generate(blockPos.X, blockPos.Y, blockPos.Z);
-                    blocks[x, y, z] = new Block(BlockDefManager.GetBlockDef(noiseValue > 0.5f ? 1 : 0), blockPos, chunk);
+                    float noiseValue = Perlin3D(blockPos);
+                    //Debug.Log(noiseValue);
+                    blocks[x, y, z] = new Block(BlockDefManager.GetBlockDef(noiseValue > 80 ? 2 : 0), blockPos, chunk);
                 }
             }
         }
@@ -529,5 +527,26 @@ public class Chunk
         chunk.Blocks = blocks;
         return chunk;
     }
+
+    public static float Perlin3D(Position blockPos)
+    {
+        return Noise.CalcPixel3D(blockPos.X, blockPos.Y, blockPos.Z, 0.015f);
+    }
+
+    /**
+    public static float Perlin3D(Position pos)
+    {
+        float AB = Mathf.PerlinNoise(pos.X, pos.Y);
+        float BC = Mathf.PerlinNoise(pos.Y, pos.Z);
+        float AC = Mathf.PerlinNoise(pos.X, pos.Z);
+
+        float BA = Mathf.PerlinNoise(pos.Y, pos.X);
+        float CB = Mathf.PerlinNoise(pos.Z, pos.Y);
+        float CA = Mathf.PerlinNoise(pos.Z, pos.X);
+
+        float ABC = AB + BC + AC + BA + CB + CA;
+        return ABC / 6f;
+    }
+    **/
 
 }
