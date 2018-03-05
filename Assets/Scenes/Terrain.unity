@@ -114,7 +114,7 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!1001 &440708611
+--- !u!1001 &486404703
 Prefab:
   m_ObjectHideFlags: 0
   serializedVersion: 2
@@ -156,22 +156,22 @@ Prefab:
     - target: {fileID: 65566044752929416, guid: 9e8bc70604e962048b92e52af0f5bcea,
         type: 2}
       propertyPath: m_Size.z
-      value: 1.1479366
+      value: 1.0656376
       objectReference: {fileID: 0}
     - target: {fileID: 65566044752929416, guid: 9e8bc70604e962048b92e52af0f5bcea,
         type: 2}
       propertyPath: m_Center.z
-      value: 0.07396829
+      value: 0.120073766
       objectReference: {fileID: 0}
     - target: {fileID: 65566044752929416, guid: 9e8bc70604e962048b92e52af0f5bcea,
         type: 2}
       propertyPath: m_Size.y
-      value: 2.76847
+      value: 2.7902253
       objectReference: {fileID: 0}
     - target: {fileID: 65566044752929416, guid: 9e8bc70604e962048b92e52af0f5bcea,
         type: 2}
       propertyPath: m_Center.y
-      value: 1.3615898
+      value: 1.3724674
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 9e8bc70604e962048b92e52af0f5bcea, type: 2}
@@ -268,7 +268,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5565471dc52ce14499b75b4cec9ddac5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  player: {fileID: 928872745}
+  player: {fileID: 994087840}
   loadDistance: 3
 --- !u!4 &877574705
 Transform:
@@ -283,8 +283,8 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &928872745 stripped
+--- !u!1 &994087840 stripped
 GameObject:
   m_PrefabParentObject: {fileID: 1783585444897076, guid: 9e8bc70604e962048b92e52af0f5bcea,
     type: 2}
-  m_PrefabInternal: {fileID: 440708611}
+  m_PrefabInternal: {fileID: 486404703}
