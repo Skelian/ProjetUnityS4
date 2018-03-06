@@ -19,10 +19,6 @@ public class WorldLoader : MonoBehaviour
         Save save = new Save("testSave");
         int seed = 66656599;
         world = save.GetWorld(0, seed, player.transform.position);
-
-
-        world.GetLoadedChunk(new Position(0, 0, 0)).SetLocalBlockBatch(0, new Position(0, 0, 0), new Position(15, 15, 15));
-        //world.GetLoadedChunk(new Position(0, 0, 0)).SetLocalBlockBatch(103, new Position(0, 0, 0), new Position(15, 15, 15));
     }
 
     void Update()

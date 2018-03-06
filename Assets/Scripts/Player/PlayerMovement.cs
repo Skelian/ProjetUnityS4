@@ -24,7 +24,6 @@ public class PlayerMovement : MonoBehaviour {
 		//Contrainte de rotation en X, Z activée
 		rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
 		jump = new Vector3 (0f, 1.5f, 0f);
-		transform.localScale -= new Vector3 (0.3f, 0.3f, 0.3f);
 	}
 	
 	// Update is called once per frame
