@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour {
 
-	public float speed, maxJumpSpeed, jumpForce;
+	public float speed, jumpForce;
 	public GameObject tete;
 
 
@@ -24,6 +24,7 @@ public class PlayerMovement : MonoBehaviour {
 		//Contrainte de rotation en X, Z activée
 		rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
 		jump = new Vector3 (0f, 1.5f, 0f);
+		transform.localScale -= new Vector3 (0.3f, 0.3f, 0.3f);
 	}
 	
 	// Update is called once per frame
@@ -47,8 +48,7 @@ public class PlayerMovement : MonoBehaviour {
 			
 		//Si le joueur saute
 		if (Input.GetAxis ("Jump") > 0 && auSol) {
-			float finalForce = Mathf.Clamp (1.5f * jumpForce, 1.5f, maxJumpSpeed);
-			rb.AddForce (new Vector3(0, finalForce, 0), ForceMode.Impulse);
+			rb.AddForce (new Vector3(0, jumpForce, 0), ForceMode.Impulse);
 			//Le joueur n'est donc plus sur le sol
 			auSol = false;
 		}

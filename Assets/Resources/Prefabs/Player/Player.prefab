@@ -640,7 +640,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   speed: 0.08
-  maxJumpSpeed: 2
   jumpForce: 2
   tete: {fileID: 1536928491634948}
   auSol: 1

@@ -23,6 +23,7 @@ public class slot : MonoBehaviour , IDropHandler{
 			libre.transform.position= libre.transform.parent.position;
 			dragHandler.item.transform.SetParent (transform);
 		}
-	} #endregion 
+	}
+	#endregion 
 
 }﻿ 
