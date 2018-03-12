@@ -1,8 +1,7 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-
-public class Utils
+﻿public class Utils
 {
+
+    public static System.Random rand = new System.Random();
 
     public static void Swap<T>(ref T a, ref T b)
     {

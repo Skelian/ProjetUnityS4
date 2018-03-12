@@ -21,10 +21,10 @@
         Position = globalPosition;
     }
 
-    public Block getNearBlock(Utils.Face face)
+    public Block GetNearBlock(Utils.Face face)
     {
         Position pos = Position.NearPosition(face);
-        Chunk chunk = ParentChunk.World.GetLoadedChunk(EntityUtils.GetChunkPosition(pos));
+        Chunk chunk = ParentChunk.World.GetChunk(EntityUtils.ToChunkPosition(pos));
         return (chunk != null ? chunk.GetBlock(pos) : null);
     }
 

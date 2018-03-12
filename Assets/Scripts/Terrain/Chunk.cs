@@ -12,11 +12,6 @@ public class Chunk
     public static int CHUNK_SIZE = 16; //total volume = CHUNK_SIZE ^ 3
 
     /// <summary>
-    /// Dimension d'une région.
-    /// </summary>
-    public static int REGION_SIZE = 16; //n * n * n chunks par fichiers
-
-    /// <summary>
     /// Monde dans lequel se trouve le chunk.
     /// </summary>
     public World World { get; private set; }
@@ -39,20 +34,7 @@ public class Chunk
     /// <summary>
     /// Blocs du chunk, recalculation de la mesh lors du changement de blocs
     /// </summary>
-    private Block[,,] blocks;
-    public Block[,,] Blocks
-    {
-        get
-        {
-            return blocks;
-        }
-
-        private set
-        {
-            blocks = value;
-            RecalculateMesh();
-        }
-    }
+    public Block[,,] Blocks { get; private set; }
 
     public static GameObject BaseChunkObject = Resources.Load("Prefabs/BaseChunkObject") as GameObject;
     public static void InitChunkObject()
@@ -98,6 +80,7 @@ public class Chunk
 
     private Chunk(World world, Position chunkPos)
     {
+        Blocks = new Block[CHUNK_SIZE, CHUNK_SIZE, CHUNK_SIZE];
         Position = chunkPos;
         World = world;
         ChunkObject = InstantiateChunkObject(chunkPos);
@@ -220,7 +203,7 @@ public class Chunk
     /// </summary>
     public bool IsPresentInChunk(Position blockPos)
     {
-        return (EntityUtils.GetChunkPosition(blockPos) == Position);
+        return (EntityUtils.ToChunkPosition(blockPos) == Position);
     }
 
     /// <summary>
@@ -228,7 +211,7 @@ public class Chunk
     /// </summary>
     public Block GetBlock(Position blockPos)
     {
-        return IsPresentInChunk(blockPos) ? blocks[blockPos.X % CHUNK_SIZE, blockPos.Y % CHUNK_SIZE, blockPos.Z % CHUNK_SIZE] : null;
+        return IsPresentInChunk(blockPos) ? Blocks[blockPos.X % CHUNK_SIZE, blockPos.Y % CHUNK_SIZE, blockPos.Z % CHUNK_SIZE] : null;
     }
 
     /// <summary>
@@ -294,15 +277,6 @@ public class Chunk
         return true;
     }
 
-    public Position GetRegionPosition()
-    {
-        return new Position(
-                                Mathf.FloorToInt(Position.X / Chunk.REGION_SIZE),
-                                Mathf.FloorToInt(Position.Y / Chunk.REGION_SIZE),
-                                Mathf.FloorToInt(Position.Z / Chunk.REGION_SIZE)
-                            );
-    }
-
     /// <summary>
     /// Crée un nouveau GameObject de chunk
     /// </summary>
@@ -344,10 +318,8 @@ public class Chunk
         new Thread(() =>
         {
             string filePath = saveFolder + "[" + chunk.Position.X + "." + chunk.Position.Y + "." + chunk.Position.Z + "].chunk";
-            using (var writer = new BinaryWriter(File.Open(filePath, FileMode.Create)))
+            using (var writer = new BinaryWriter(File.Open(filePath, FileMode.Create, FileAccess.Write)))
             {
-                writer.Write(CHUNK_SIZE);
-
                 int x, y, z, currentBlock = chunk.Blocks[0, 0, 0].ID, len = 0;
                 for (x = 0; x < CHUNK_SIZE; x++)
                 {
@@ -386,17 +358,13 @@ public class Chunk
         string filePath = world.SaveDir + "[" + chunkPos.X + "." + chunkPos.Y + "." + chunkPos.Z + "].chunk";
 
         if (!File.Exists(filePath))
-            return CreateChunk(world, chunkPos, seed);
+            return CreateChunk(world, chunkPos);
 
-        var blocks = new Block[CHUNK_SIZE, CHUNK_SIZE, CHUNK_SIZE];
         Chunk newChunk = new Chunk(world, chunkPos);
         Position globalChunkPos = chunkPos.MultAll(CHUNK_SIZE);
 
         using (var reader = new BinaryReader(File.Open(filePath, FileMode.Open)))
         {
-            if (reader.ReadInt32() != CHUNK_SIZE)
-                return CreateChunk(world, chunkPos, seed); //format de chunk incorrect
-
             int x = 0, y = 0, z = 0, len;
             bool filled = false;
             while (!filled)
@@ -406,7 +374,7 @@ public class Chunk
 
                 while (len-- > 0)
                 {
-                    blocks[x, y, z] = new Block(definition, globalChunkPos.Add(x, y, z), newChunk);
+                    newChunk.Blocks[x, y, z] = new Block(definition, globalChunkPos.Add(x, y, z), newChunk);
                     if (z >= 15)
                     {
                         z = 0;
@@ -433,7 +401,7 @@ public class Chunk
             }
         }
 
-        newChunk.Blocks = blocks;
+        newChunk.RecalculateMesh();
         newChunk.altered = false;
         return newChunk;
     }
@@ -448,7 +416,6 @@ public class Chunk
 
     public static Chunk NewFilledChunk(World world, Position chunkPos, int blockID)
     {
-        Block[,,] blocks = new Block[CHUNK_SIZE, CHUNK_SIZE, CHUNK_SIZE];
         BlockDef definition = BlockDefManager.GetBlockDef(blockID);
         Chunk chunk = new Chunk(world, chunkPos);
         Position globalChunkPos = chunkPos.MultAll(CHUNK_SIZE);
@@ -457,59 +424,78 @@ public class Chunk
         for (x = 0; x < CHUNK_SIZE; x++)
             for (y = 0; y < CHUNK_SIZE; y++)
                 for (z = 0; z < CHUNK_SIZE; z++)
-                    blocks[x, y, z] = new Block(definition, globalChunkPos.Add(x, y, z), chunk);
+                    chunk.Blocks[x, y, z] = new Block(definition, globalChunkPos.Add(x, y, z), chunk);
 
-        chunk.Blocks = blocks;
         return chunk;
     }
 
     /// <summary>
     /// Retourne un chunk généré selon la Seed spécifiée.
     /// </summary>
-    public static Chunk CreateChunk(World world, Position chunkPos, int seed)
+    public static Chunk CreateChunk(World world, Position chunkPos)
     {
-        if (seed == World.SEED_EMPTY_WORLD)
-        {
+        if (world.Seed == World.SEED_EMPTY_WORLD)
             return NewEmptyChunk(world, chunkPos);
-        }
 
-        //test flat world
-        if (seed == World.SEED_TEST_WORLD)
-        {
+        if (world.Seed == World.SEED_TEST_WORLD)
             return chunkPos.Y <= 0 ? NewTestChunk(world, chunkPos) : NewEmptyChunk(world, chunkPos);
-        }
 
-        //temporary
-
-        if(chunkPos.Y <= 0)
-            return NewChunkUsingSeed(world, chunkPos);
-        return NewEmptyChunk(world, chunkPos);
+        return NewChunkUsingSeed(world, chunkPos);
     }
 
     private static Chunk NewTestChunk(World world, Position position)
     {
-        Block[,,] blocks = new Block[CHUNK_SIZE, CHUNK_SIZE, CHUNK_SIZE];
         Chunk chunk = new Chunk(world, position);
         Position globalChunkPos = position.MultAll(CHUNK_SIZE);
 
         int x, y, z;
         for (x = 0; x < CHUNK_SIZE; x++)
             for (y = 0; y < CHUNK_SIZE; y++)
-                for (z = 0; z < CHUNK_SIZE; z++) {
+                for (z = 0; z < CHUNK_SIZE; z++)
+                {
                     float value = Random.value;
-                    blocks[x, y, z] = new Block(BlockDefManager.GetBlockDef(value > 0.3f ? value < 0.7f ? 1 : 2 : 102), globalChunkPos.Add(x, y, z), chunk);
+                    chunk.Blocks[x, y, z] = new Block(BlockDefManager.GetBlockDef(value > 0.3f ? value < 0.7f ? 1 : 2 : 102), globalChunkPos.Add(x, y, z), chunk);
                 }
 
-        chunk.Blocks = blocks;
+        chunk.RecalculateMesh();
         return chunk;
     }
 
     private static Chunk NewChunkUsingSeed(World world, Position position)
     {
-        Block[,,] blocks = new Block[CHUNK_SIZE, CHUNK_SIZE, CHUNK_SIZE];
         Chunk chunk = new Chunk(world, position);
         Position globalChunkPos = position.MultAll(CHUNK_SIZE);
 
+        if (position.Y <= 0)
+            SetBlocks3DNoise(globalChunkPos, chunk);
+        else
+            SetBlocks2DNoise(globalChunkPos, chunk, 16);
+
+        SetBlockOreGen(chunk);
+
+        chunk.RecalculateMesh();
+        return chunk;
+    }
+
+    private static void SetBlocks2DNoise(Position globalChunkPos, Chunk chunk, int baseGlobalPosition)
+    {
+        int raise = globalChunkPos.Y - baseGlobalPosition + 90;
+        float heightSmoother = 0.5f;
+
+        for (int x = 0; x < CHUNK_SIZE; x++)
+        {
+            for (int z = 0; z < CHUNK_SIZE; z++)
+            {
+                Position blockPos = globalChunkPos.Add(x, 0, z);
+                float noiseValue = Noise.CalcPixel2D(Mathf.Abs(blockPos.X), Mathf.Abs(blockPos.Z), 0.002f) * heightSmoother;
+                for (int y = 0; y < CHUNK_SIZE; y++)
+                    chunk.Blocks[x, y, z] = new Block(BlockDefManager.GetBlockDef(noiseValue > (raise + y) ? 1 : 0), blockPos.Add(0, y, 0), chunk);
+            }
+        }
+    }
+
+    private static void SetBlocks3DNoise(Position globalChunkPos, Chunk chunk)
+    {
         for (int x = 0; x < CHUNK_SIZE; x++)
         {
             for (int y = 0; y < CHUNK_SIZE; y++)
@@ -517,36 +503,77 @@ public class Chunk
                 for (int z = 0; z < CHUNK_SIZE; z++)
                 {
                     Position blockPos = globalChunkPos.Add(x, y, z);
-                    float noiseValue = Perlin3D(blockPos);
-                    //Debug.Log(noiseValue);
-                    blocks[x, y, z] = new Block(BlockDefManager.GetBlockDef(noiseValue > 80 ? 2 : 0), blockPos, chunk);
+                    float noiseValue = Noise.CalcPixel3D(blockPos.X, blockPos.Y, blockPos.Z, 0.015f);
+                    chunk.Blocks[x, y, z] = new Block(BlockDefManager.GetBlockDef(noiseValue > 80 ? 2 : 0), blockPos, chunk);
+                }
+            }
+        }
+    }
+
+    private static void SetBlockOreGen(Chunk chunk)
+    {
+        for (int x = 0; x < CHUNK_SIZE; x++)
+        {
+            for (int y = 0; y < CHUNK_SIZE; y++)
+            {
+                for (int z = 0; z < CHUNK_SIZE; z++)
+                {
+                    if (chunk.Blocks[x, y, z].ID != Block.AIR_BLOCK_ID)
+                    {
+                        if (Utils.rand.Next(1, 100) < 35)
+                            return;
+
+                        BlockDef ore = BlockDefManager.RandomBlock(BlockDef.TYPE_ORE);
+                        chunk.Blocks[x, y, z].Definition = ore;
+
+                        int gen = 50;
+
+                        //down
+                        SetBlockWithProbability(chunk, new Position(x + 1, y - 1, z + 1), ore, gen);
+                        SetBlockWithProbability(chunk, new Position(x - 1, y - 1, z - 1), ore, gen);
+                        SetBlockWithProbability(chunk, new Position(x + 1, y - 1, z - 1), ore, gen);
+                        SetBlockWithProbability(chunk, new Position(x - 1, y - 1, z + 1), ore, gen);
+                        SetBlockWithProbability(chunk, new Position(x, y - 1, z), ore, gen);
+                        SetBlockWithProbability(chunk, new Position(x - 1, y - 1, z), ore, gen);
+                        SetBlockWithProbability(chunk, new Position(x + 1, y - 1, z), ore, gen);
+                        SetBlockWithProbability(chunk, new Position(x, y - 1, z - 1), ore, gen);
+                        SetBlockWithProbability(chunk, new Position(x, y - 1, z + 1), ore, gen);
+
+                        //up
+                        SetBlockWithProbability(chunk, new Position(x + 1, y + 1, z + 1), ore, gen);
+                        SetBlockWithProbability(chunk, new Position(x - 1, y + 1, z - 1), ore, gen);
+                        SetBlockWithProbability(chunk, new Position(x + 1, y + 1, z - 1), ore, gen);
+                        SetBlockWithProbability(chunk, new Position(x - 1, y + 1, z + 1), ore, gen);
+                        SetBlockWithProbability(chunk, new Position(x, y + 1, z), ore, gen);
+                        SetBlockWithProbability(chunk, new Position(x - 1, y + 1, z), ore, gen);
+                        SetBlockWithProbability(chunk, new Position(x + 1, y + 1, z), ore, gen);
+                        SetBlockWithProbability(chunk, new Position(x, y + 1, z - 1), ore, gen);
+                        SetBlockWithProbability(chunk, new Position(x, y + 1, z + 1), ore, gen);
+
+                        //sides
+                        SetBlockWithProbability(chunk, new Position(x + 1, y, z + 1), ore, gen);
+                        SetBlockWithProbability(chunk, new Position(x - 1, y, z - 1), ore, gen);
+                        SetBlockWithProbability(chunk, new Position(x + 1, y, z - 1), ore, gen);
+                        SetBlockWithProbability(chunk, new Position(x - 1, y, z + 1), ore, gen);
+                        SetBlockWithProbability(chunk, new Position(x - 1, y, z), ore, gen);
+                        SetBlockWithProbability(chunk, new Position(x + 1, y, z), ore, gen);
+                        SetBlockWithProbability(chunk, new Position(x, y, z - 1), ore, gen);
+                        SetBlockWithProbability(chunk, new Position(x, y, z + 1), ore, gen);
+                    }
                 }
             }
         }
 
-        chunk.Blocks = blocks;
-        return chunk;
     }
 
-    public static float Perlin3D(Position blockPos)
+    private static void SetBlockWithProbability(Chunk chunk, Position position, BlockDef definition, int percent)
     {
-        return Noise.CalcPixel3D(blockPos.X, blockPos.Y, blockPos.Z, 0.015f);
+        if (!IsValid(position))
+            return;
+
+        if (chunk.Blocks[position.X, position.Y, position.Z].ID != Block.AIR_BLOCK_ID)
+            if (Utils.rand.Next(1, 100) > percent)
+                chunk.Blocks[position.X, position.Y, position.Z].Definition = definition;
     }
-
-    /**
-    public static float Perlin3D(Position pos)
-    {
-        float AB = Mathf.PerlinNoise(pos.X, pos.Y);
-        float BC = Mathf.PerlinNoise(pos.Y, pos.Z);
-        float AC = Mathf.PerlinNoise(pos.X, pos.Z);
-
-        float BA = Mathf.PerlinNoise(pos.Y, pos.X);
-        float CB = Mathf.PerlinNoise(pos.Z, pos.Y);
-        float CA = Mathf.PerlinNoise(pos.Z, pos.X);
-
-        float ABC = AB + BC + AC + BA + CB + CA;
-        return ABC / 6f;
-    }
-    **/
 
 }
