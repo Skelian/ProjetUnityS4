@@ -11,6 +11,8 @@ public class TimeController : MonoBehaviour {
     private float timeMultiplier = 1f;
     private float sunInitialIntensity;
 
+    private float adjustment = 1f;
+
     private void Start()
     {
         sunInitialIntensity = sun.intensity;
@@ -26,6 +28,9 @@ public class TimeController : MonoBehaviour {
         {
             currentTimeOfDay = 0;
         }
+
+        RenderSettings.skybox.SetFloat("_Rotation", Time.time * adjustment);
+
     }
 
     void UpdateSun()
