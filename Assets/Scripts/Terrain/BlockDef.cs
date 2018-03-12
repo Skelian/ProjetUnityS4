@@ -2,6 +2,10 @@
 
 public class BlockDef
 {
+    public const int TYPE_CLASSIC = 0;
+    public const int TYPE_ORE = 1;
+    public const int TYPE_FLUID = 2;
+
     /// <summary>
     /// Nom du bloc.
     /// </summary>
@@ -35,11 +39,16 @@ public class BlockDef
     public Rect UvRect { get; set; }
 
     /// <summary>
+    /// Type du block.
+    /// </summary>
+    public int BlockType { get; private set; }
+
+    /// <summary>
     /// Nombre de dégats infligés au joueur par 0.5 seconde au contact du bloc
     /// </summary>
     public int DamageOnContact { get; private set; }
 
-    public BlockDef(int id, string name, int resistance, bool transparent, bool gravity, bool destructible, int damageOnContact)
+    public BlockDef(int id, string name, int resistance, bool transparent, bool gravity, bool destructible, int damageOnContact, int blockType)
     {
         Id = id;
         BlockName = name;
@@ -48,19 +57,21 @@ public class BlockDef
         Gravity = gravity;
         Destructible = destructible;
         DamageOnContact = damageOnContact;
+        BlockType = blockType;
     }
 
     public class BlockDefBuilder
     {
         private string blockName;
-        private int id, resistance, damageOnContact = 0;
+        private int id, resistance, damageOnContact = 0, blockType;
         private bool gravity = false, transparent = false, destructible = true;
 
-        public BlockDefBuilder(int id, string blockName, int resistance)
+        public BlockDefBuilder(int id, string blockName, int resistance, int blockType = TYPE_CLASSIC)
         {
             this.id = id;
             this.blockName = blockName;
             this.resistance = resistance;
+            this.blockType = blockType;
         }
 
         public BlockDefBuilder SetGravity(bool gravity)
@@ -89,7 +100,7 @@ public class BlockDef
 
         public BlockDef Build()
         {
-            return new BlockDef(id, blockName, resistance, transparent, gravity, destructible, damageOnContact);
+            return new BlockDef(id, blockName, resistance, transparent, gravity, destructible, damageOnContact, blockType);
         }
     }
 

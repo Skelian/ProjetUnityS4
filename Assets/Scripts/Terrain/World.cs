@@ -67,7 +67,7 @@ public class World
         if (!Directory.Exists(SaveDir))
             Directory.CreateDirectory(SaveDir);
 
-        Reload(EntityUtils.GetChunkPosition(playerPosition), false);
+        Reload(EntityUtils.ToChunkPosition(playerPosition), false);
     }
 
 
@@ -88,7 +88,7 @@ public class World
             LoadedChunks.Add(pos, GetChunkFromFile(pos));
         }
 
-        Position playerChunkPosition = EntityUtils.GetChunkPosition(playerPosition);
+        Position playerChunkPosition = EntityUtils.ToChunkPosition(playerPosition);
         if (playerChunkPosition == CenterChunkPosition)
             return;
 
@@ -167,7 +167,7 @@ public class World
     /// <summary>
     /// Retourne le chunk présent aux coordonées indiquées.
     /// </summary>
-    public Chunk GetLoadedChunk(Position chunkPos)
+    public Chunk GetChunk(Position chunkPos)
     {
         return (IsChunkLoaded(chunkPos) ? LoadedChunks[chunkPos] : null);
     }

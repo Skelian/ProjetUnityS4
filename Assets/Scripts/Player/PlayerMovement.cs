@@ -1,11 +1,12 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Networking;
 
-public class PlayerMovement : MonoBehaviour {
+public class PlayerMovement : NetworkBehaviour {
 
 	public float speed, jumpForce;
-	public GameObject tete;
+	[SerializeField] private GameObject tete;
 
 
 	private float mh, mv;
@@ -15,7 +16,7 @@ public class PlayerMovement : MonoBehaviour {
 
 	[SerializeField] public bool auSol;
 
-	// Use this for initialization
+	// Use .this for initialization
 	void Start () {
 		Cursor.visible = false;
 		Cursor.lockState = CursorLockMode.Locked;
@@ -28,28 +29,32 @@ public class PlayerMovement : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-		transform.Rotate (0, Input.GetAxis ("Mouse X") * 5f, 0);
+		if (isLocalPlayer) {
 
 
-		mv = Input.GetAxis ("Vertical");
-		mh = Input.GetAxis ("Horizontal");
+			transform.Rotate (0, Input.GetAxis ("Mouse X") * 5f, 0);
 
-		if (mv != 0) {
-			transform.Translate (mv * transform.forward * speed, Space.World);
-			ator.SetBool ("walking", true);
-		} else {
-			ator.SetBool ("walking", false);
-		}
-		if (mh != 0){
-			transform.Translate (mh * transform.right * speed, Space.World);
-			ator.SetBool ("walking", true);
-		}
+
+			mv = Input.GetAxis ("Vertical");
+			mh = Input.GetAxis ("Horizontal");
+
+			if (mv != 0) {
+				transform.Translate (mv * transform.forward * speed, Space.World);
+				ator.SetBool ("walking", true);
+			} else {
+				ator.SetBool ("walking", false);
+			}
+			if (mh != 0) {
+				transform.Translate (mh * transform.right * speed, Space.World);
+				ator.SetBool ("walking", true);
+			}
 			
-		//Si le joueur saute
-		if (Input.GetAxis ("Jump") > 0 && auSol) {
-			rb.AddForce (new Vector3(0, jumpForce, 0), ForceMode.Impulse);
-			//Le joueur n'est donc plus sur le sol
-			auSol = false;
+			//Si le joueur saute
+			if (Input.GetAxis ("Jump") > 0 && auSol) {
+				rb.AddForce (new Vector3 (0, jumpForce, 0), ForceMode.Impulse);
+				//Le joueur n'est donc plus sur le sol
+				auSol = false;
+			}
 		}
 	}
 
@@ -60,7 +65,8 @@ public class PlayerMovement : MonoBehaviour {
 	}
 
 	void FixedUpdate(){
-		RotateCameraY ();
+		if(isLocalPlayer)
+			RotateCameraY ();
 	}
 
 	float NegativeEuler(float angle){
@@ -81,5 +87,11 @@ public class PlayerMovement : MonoBehaviour {
 			if(Input.GetAxis ("Mouse Y") != 0)
 				tete.transform.Rotate (0, 0, ((Input.GetAxis ("Mouse Y")> 0) ? 0.1f : 0f) * 25f);
 		}
+	}
+		
+	public override void OnStartLocalPlayer ()
+	{
+		tete = transform.GetChild (0).gameObject;
+		tete.transform.GetChild (0).gameObject.SetActive(true);
 	}
 }

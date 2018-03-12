@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using System.IO;
+using System.Linq;
 using UnityEngine;
 
 public class BlockDefManager
@@ -34,14 +34,14 @@ public class BlockDefManager
             .Build());
 
         //les ids des minéraux commencent à 100
-        AddBlockDef(new BlockDef.BlockDefBuilder(100, "iron_ore", 3).Build());
-        AddBlockDef(new BlockDef.BlockDefBuilder(101, "titanium_ore", 4).Build());
-        AddBlockDef(new BlockDef.BlockDefBuilder(102, "uranium_ore", 4).Build());
-        AddBlockDef(new BlockDef.BlockDefBuilder(103, "oil_ore", 3).Build());
-        AddBlockDef(new BlockDef.BlockDefBuilder(104, "lead_ore", 3).Build());
+        AddBlockDef(new BlockDef.BlockDefBuilder(100, "iron_ore", 3, BlockDef.TYPE_ORE).Build());
+        AddBlockDef(new BlockDef.BlockDefBuilder(101, "titanium_ore", 4, BlockDef.TYPE_ORE).Build());
+        AddBlockDef(new BlockDef.BlockDefBuilder(102, "uranium_ore", 4, BlockDef.TYPE_ORE).Build());
+        AddBlockDef(new BlockDef.BlockDefBuilder(103, "oil_ore", 3, BlockDef.TYPE_ORE).Build());
+        AddBlockDef(new BlockDef.BlockDefBuilder(104, "lead_ore", 3, BlockDef.TYPE_ORE).Build());
 
         //les ids des blocs techniques commencent à 200
-        AddBlockDef(new BlockDef.BlockDefBuilder(200, "lava", 3)
+        AddBlockDef(new BlockDef.BlockDefBuilder(200, "lava", 3, BlockDef.TYPE_FLUID)
             .SetDestructible(false)
             .SetDamageOnContact(6) //6pv de dégat par 0.5 seconde au contact de la lave
             .Build());
@@ -78,6 +78,12 @@ public class BlockDefManager
     public static BlockDef GetBlockDef(int blockID)
     {
         return blockDefs[blockID];
+    }
+
+    public static BlockDef RandomBlock(int blockType)
+    {
+        var matches = blockDefs.Where(entry => entry.Value.BlockType == blockType);
+        return matches.ToList()[Utils.rand.Next(matches.Count())].Value;
     }
 
 }
