@@ -110,28 +110,28 @@ public class Chunk
                         continue;
 
                     // haut
-                    if (IsBlockTransparent(x, y + 1, z))
+                    if (IsBlockTransparent(x, y + 1, z) || IsBlockScaled(x, y + 1, z))
                         BuildFace(block.Definition, new Vector3(x, y + 1, z), Vector3.forward, Vector3.right, true, verts, uvs, tris);
 
                     // bas
-                    if (IsBlockTransparent(x, y - 1, z))
+                    if (IsBlockTransparent(x, y - 1, z) || IsBlockScaled(x, y - 1, z))
                         BuildFace(block.Definition, new Vector3(x, y, z), Vector3.forward, Vector3.right, false, verts, uvs, tris);
 
                     // gauche
-                    if (IsBlockTransparent(x - 1, y, z))
-                        BuildFace(block.Definition, new Vector3(x, y, z), Vector3.up, Vector3.forward, false, verts, uvs, tris);
+                    if (IsBlockTransparent(x - 1, y, z) || IsBlockScaled(x - 1, y, z))
+                        BuildFace(block.Definition, new Vector3(x, y, z), Vector3.up, Vector3.forward, false, verts, uvs, tris, true);
 
                     // droite
-                    if (IsBlockTransparent(x + 1, y, z))
-                        BuildFace(block.Definition, new Vector3(x + 1, y, z), Vector3.up, Vector3.forward, true, verts, uvs, tris);
+                    if (IsBlockTransparent(x + 1, y, z) || IsBlockScaled(x + 1, y, z))
+                        BuildFace(block.Definition, new Vector3(x + 1, y, z), Vector3.up, Vector3.forward, true, verts, uvs, tris, true);
 
                     // avant
-                    if (IsBlockTransparent(x, y, z + 1))
-                        BuildFace(block.Definition, new Vector3(x, y, z + 1), Vector3.up, Vector3.right, false, verts, uvs, tris);
+                    if (IsBlockTransparent(x, y, z + 1) || IsBlockScaled(x, y, z + 1))
+                        BuildFace(block.Definition, new Vector3(x, y, z + 1), Vector3.up, Vector3.right, false, verts, uvs, tris, true);
 
                     // arrière
-                    if (IsBlockTransparent(x, y, z - 1))
-                        BuildFace(block.Definition, new Vector3(x, y, z), Vector3.up, Vector3.right, true, verts, uvs, tris);
+                    if (IsBlockTransparent(x, y, z - 1) || IsBlockScaled(x, y, z - 1))
+                        BuildFace(block.Definition, new Vector3(x, y, z), Vector3.up, Vector3.right, true, verts, uvs, tris, true);
 
                 }
             }
@@ -153,9 +153,12 @@ public class Chunk
     /// <summary>
     /// Construit une face d'un block du chunk.
     /// </summary>
-    private void BuildFace(BlockDef definition, Vector3 corner, Vector3 up, Vector3 right, bool reversed, List<Vector3> verts, List<Vector2> uvs, List<int> tris)
+    private void BuildFace(BlockDef definition, Vector3 corner, Vector3 up, Vector3 right, bool reversed, List<Vector3> verts, List<Vector2> uvs, List<int> tris, bool applyScale = false)
     {
         int index = verts.Count;
+
+        if (applyScale)
+            up *= definition.Scale;
 
         verts.Add(corner);
         verts.Add(corner + up);
@@ -196,6 +199,11 @@ public class Chunk
     private bool IsBlockTransparent(int localPosX, int localPosY, int localPosZ)
     {
         return (Chunk.IsValid(localPosX, localPosY, localPosZ) ? Blocks[localPosX, localPosY, localPosZ].Definition.Transparent : true);
+    }
+
+    private bool IsBlockScaled(int localPosX, int localPosY, int localPosZ)
+    {
+        return (Chunk.IsValid(localPosX, localPosY, localPosZ) ? Blocks[localPosX, localPosY, localPosZ].Definition.Scale == 1 ? false : true : false);
     }
 
     /// <summary>

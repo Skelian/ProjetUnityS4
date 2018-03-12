@@ -39,6 +39,11 @@ public class BlockDef
     public Rect UvRect { get; set; }
 
     /// <summary>
+    /// Epaisseur du bloc.
+    /// </summary>
+    public float Scale { get; private set; }
+
+    /// <summary>
     /// Type du block.
     /// </summary>
     public int BlockType { get; private set; }
@@ -48,7 +53,7 @@ public class BlockDef
     /// </summary>
     public int DamageOnContact { get; private set; }
 
-    public BlockDef(int id, string name, int resistance, bool transparent, bool gravity, bool destructible, int damageOnContact, int blockType)
+    public BlockDef(int id, string name, int resistance, bool transparent, bool gravity, bool destructible, int damageOnContact, int blockType, float scale)
     {
         Id = id;
         BlockName = name;
@@ -58,6 +63,7 @@ public class BlockDef
         Destructible = destructible;
         DamageOnContact = damageOnContact;
         BlockType = blockType;
+        Scale = scale;
     }
 
     public class BlockDefBuilder
@@ -65,6 +71,7 @@ public class BlockDef
         private string blockName;
         private int id, resistance, damageOnContact = 0, blockType;
         private bool gravity = false, transparent = false, destructible = true;
+        private float scale = 1;
 
         public BlockDefBuilder(int id, string blockName, int resistance, int blockType = TYPE_CLASSIC)
         {
@@ -98,9 +105,15 @@ public class BlockDef
             return this;
         }
 
+        public BlockDefBuilder SetScale(float scale)
+        {
+            this.scale = scale;
+            return this;
+        }
+
         public BlockDef Build()
         {
-            return new BlockDef(id, blockName, resistance, transparent, gravity, destructible, damageOnContact, blockType);
+            return new BlockDef(id, blockName, resistance, transparent, gravity, destructible, damageOnContact, blockType, scale);
         }
     }
 

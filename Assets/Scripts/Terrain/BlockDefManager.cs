@@ -45,12 +45,30 @@ public class BlockDefManager
             .SetDestructible(false)
             .SetDamageOnContact(6) //6pv de dégat par 0.5 seconde au contact de la lave
             .Build());
+
+        AddBlockDef(new BlockDef.BlockDefBuilder(201, "lava", 3, BlockDef.TYPE_FLUID)
+            .SetDestructible(false)
+            .SetScale(0.75f)
+            .SetDamageOnContact(6)
+            .Build());
+
+        AddBlockDef(new BlockDef.BlockDefBuilder(202, "lava", 3, BlockDef.TYPE_FLUID)
+            .SetDestructible(false)
+            .SetScale(0.75f)
+            .SetDamageOnContact(6)
+            .Build());
+
+        AddBlockDef(new BlockDef.BlockDefBuilder(203, "lava", 3, BlockDef.TYPE_FLUID)
+            .SetDestructible(false)
+            .SetScale(0.25f)
+            .SetDamageOnContact(6)
+            .Build());
     }
 
     public static void BakeTextureAtlas()
     {
         List<Texture2D> textures = new List<Texture2D>();
-        foreach(BlockDef definition in blockDefs.Values)
+        foreach (BlockDef definition in blockDefs.Values)
             textures.Add(Resources.Load("Textures/" + definition.BlockName) as Texture2D);
 
         Texture2D atlas = new Texture2D(0, 0);
@@ -65,7 +83,7 @@ public class BlockDefManager
         **/
 
         int index = 0;
-        foreach(BlockDef definition in blockDefs.Values)
+        foreach (BlockDef definition in blockDefs.Values)
             definition.UvRect = rects[index++];
 
         //apply texture atlas
