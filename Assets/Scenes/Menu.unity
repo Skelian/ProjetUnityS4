@@ -311,10 +311,10 @@ MonoBehaviour:
   m_ScriptCRCCheck: 1
   m_MaxDelay: 0.01
   m_LogLevel: 2
-  m_PlayerPrefab: {fileID: 1270850552002656, guid: 133fd7dedc225e246a2ecbf1ba1d58fc,
+  m_PlayerPrefab: {fileID: 1661462578426714, guid: 133fd7dedc225e246a2ecbf1ba1d58fc,
     type: 2}
   m_AutoCreatePlayer: 1
-  m_PlayerSpawnMethod: 0
+  m_PlayerSpawnMethod: 1
   m_OfflineScene: Terrain
   m_OnlineScene: MultiplayerScene
   m_SpawnPrefabs: []
