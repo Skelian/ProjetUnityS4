@@ -18,8 +18,8 @@ public class PlayerMovement : NetworkBehaviour {
 
 	// Use .this for initialization
 	void Start () {
-		Cursor.visible = false;
-		Cursor.lockState = CursorLockMode.Locked;
+		/*Cursor.visible = false;
+		Cursor.lockState = CursorLockMode.Locked;*/
 		rb = GetComponent<Rigidbody> ();
 		ator = GetComponent<Animator> ();
 		//Contrainte de rotation en X, Z activée
@@ -29,33 +29,42 @@ public class PlayerMovement : NetworkBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-		if (isLocalPlayer) {
+        if (isLocalPlayer)
+        {
+
+            if (!GestionMenu.pause)
+            {
+                if (!GestionMenu.InvStats)
+                    transform.Rotate(0, Input.GetAxis("Mouse X") * 5f, 0);
 
 
-			transform.Rotate (0, Input.GetAxis ("Mouse X") * 5f, 0);
+                mv = Input.GetAxis("Vertical");
+                mh = Input.GetAxis("Horizontal");
 
+                if (mv != 0)
+                {
+                    transform.Translate(mv * transform.forward * speed, Space.World);
+                    ator.SetBool("walking", true);
+                }
+                else
+                {
+                    ator.SetBool("walking", false);
+                }
+                if (mh != 0)
+                {
+                    transform.Translate(mh * transform.right * speed, Space.World);
+                    ator.SetBool("walking", true);
+                }
 
-			mv = Input.GetAxis ("Vertical");
-			mh = Input.GetAxis ("Horizontal");
-
-			if (mv != 0) {
-				transform.Translate (mv * transform.forward * speed, Space.World);
-				ator.SetBool ("walking", true);
-			} else {
-				ator.SetBool ("walking", false);
-			}
-			if (mh != 0) {
-				transform.Translate (mh * transform.right * speed, Space.World);
-				ator.SetBool ("walking", true);
-			}
-			
-			//Si le joueur saute
-			if (Input.GetAxis ("Jump") > 0 && auSol) {
-				rb.AddForce (new Vector3 (0, jumpForce, 0), ForceMode.Impulse);
-				//Le joueur n'est donc plus sur le sol
-				auSol = false;
-			}
-		}
+                //Si le joueur saute
+                if (Input.GetAxis("Jump") > 0 && auSol)
+                {
+                    rb.AddForce(new Vector3(0, jumpForce, 0), ForceMode.Impulse);
+                    //Le joueur n'est donc plus sur le sol
+                    auSol = false;
+                }
+            }
+        }
 	}
 
 	void OnCollisionStay(Collision co){
@@ -65,8 +74,8 @@ public class PlayerMovement : NetworkBehaviour {
 	}
 
 	void FixedUpdate(){
-		if(isLocalPlayer)
-			RotateCameraY ();
+		if((isLocalPlayer)&&(!GestionMenu.pause)&&(!GestionMenu.InvStats))
+                    RotateCameraY ();
 	}
 
 	float NegativeEuler(float angle){
