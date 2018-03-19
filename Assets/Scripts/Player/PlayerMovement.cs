@@ -8,7 +8,6 @@ public class PlayerMovement : NetworkBehaviour {
 	public float speed, jumpForce;
 	[SerializeField] private GameObject tete;
 
-
 	private float mh, mv;
 	private Vector3 jump;
 	private Animator ator;

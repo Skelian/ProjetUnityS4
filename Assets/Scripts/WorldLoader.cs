@@ -13,12 +13,13 @@ public class WorldLoader : MonoBehaviour
         BlockDefManager.BakeTextureAtlas();
 
         Chunk.InitChunkObject();
+        AsyncChunkOp.Init();
 
         Settings.loadDistance = loadDistance;
 
         Save save = new Save("testSave");
         int seed = 66656599;
-        world = save.GetWorld(0, seed, player.transform.position);
+        world = save.CreateWorld(0, seed, player.transform.position);
     }
 
     void Update()
