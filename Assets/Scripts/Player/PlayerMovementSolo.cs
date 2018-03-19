@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
 
-public class PlayerMovement : NetworkBehaviour {
+public class PlayerMovementSolo : MonoBehaviour {
 
 	public float speed, jumpForce;
 	[SerializeField] private GameObject tete;
+
 
 	private float mh, mv;
 	private Vector3 jump;
@@ -26,10 +27,11 @@ public class PlayerMovement : NetworkBehaviour {
 		rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
 		jump = new Vector3 (0f, 1.5f, 0f);
 	}
-	
+
 	// Update is called once per frame
 	void Update () {
-		if(!GestionMenu.pause && isLocalPlayer){
+
+		if(!GestionMenu.pause){
 			RotateCameraX ();
 
 			Deplacement ();
@@ -39,39 +41,45 @@ public class PlayerMovement : NetworkBehaviour {
 	}
 
 	void FixedUpdate(){
-		if((!GestionMenu.pause)&&(!GestionMenu.InvStats)&&isLocalPlayer)
+		if((!GestionMenu.pause)&&(!GestionMenu.InvStats))
 			RotateCameraY ();
 	}
 
 
-	void Deplacement(){
-		mv = Input.GetAxis ("Vertical");
-		mh = Input.GetAxis ("Horizontal");
+	void Deplacement(){		
 
-		if (mv != 0) {
-			transform.Translate (mv * transform.forward * speed, Space.World);
-			ator.SetBool ("walking", true);
-		} else {
-			ator.SetBool ("walking", false);
-		}
-		if (mh != 0) {
-			transform.Translate (mh * transform.right * speed, Space.World);
-			ator.SetBool ("walking", true);
-		}
+                mv = Input.GetAxis("Vertical");
+                mh = Input.GetAxis("Horizontal");
+
+                if (mv != 0)
+                {
+                    transform.Translate(mv * transform.forward * speed, Space.World);
+                    ator.SetBool("walking", true);
+                }
+                else
+                {
+                    ator.SetBool("walking", false);
+                }
+                if (mh != 0)
+                {
+                    transform.Translate(mh * transform.right * speed, Space.World);
+                    ator.SetBool("walking", true);
+                }
 	}
 
 	void Saut(){
-		if (Input.GetAxis ("Jump") > 0 && auSol) {
-			rb.AddForce (new Vector3 (0, jumpForce, 0), ForceMode.Impulse);
-			//Le joueur n'est donc plus sur le sol
-			auSol = false;
-		}
+			if (Input.GetAxis ("Jump") > 0 && auSol) {
+				rb.AddForce (new Vector3 (0, jumpForce, 0), ForceMode.Impulse);
+				//Le joueur n'est donc plus sur le sol
+				auSol = false;
+			}
 	}
 
 	void RotateCameraX(){
-		transform.Rotate (0, Input.GetAxis ("Mouse X") * 5f, 0);
+		if (!GestionMenu.InvStats)
+            transform.Rotate(0, Input.GetAxis("Mouse X") * 5f, 0);
 	}
-		
+
 	float NegativeEuler(float angle){
 		return (angle > 180) ? angle - 360 : angle;
 	}
@@ -100,9 +108,4 @@ public class PlayerMovement : NetworkBehaviour {
 		}
 	}
 		
-	public override void OnStartLocalPlayer ()
-	{
-		tete = transform.GetChild (0).gameObject;
-		tete.transform.GetChild (0).gameObject.SetActive(true);
-	}
 }
