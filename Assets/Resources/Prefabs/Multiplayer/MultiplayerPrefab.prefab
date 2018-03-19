@@ -50,6 +50,9 @@ GameObject:
   serializedVersion: 5
   m_Component:
   - component: {fileID: 4656915769037012}
+  - component: {fileID: 20282873499728094}
+  - component: {fileID: 114764102769807744}
+  - component: {fileID: 114609034893806456}
   m_Layer: 0
   m_Name: tete
   m_TagString: Untagged
@@ -545,6 +548,42 @@ Transform:
   m_Father: {fileID: 4034824765081758}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!20 &20282873499728094
+Camera:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1084937059493214}
+  m_Enabled: 1
+  serializedVersion: 2
+  m_ClearFlags: 1
+  m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 0}
+  m_NormalizedViewPortRect:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 1
+    height: 1
+  near clip plane: 0.3
+  far clip plane: 1000
+  field of view: 60
+  orthographic: 0
+  orthographic size: 5
+  m_Depth: 0
+  m_CullingMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_RenderingPath: -1
+  m_TargetTexture: {fileID: 0}
+  m_TargetDisplay: 0
+  m_TargetEye: 3
+  m_HDR: 1
+  m_AllowMSAA: 1
+  m_AllowDynamicResolution: 0
+  m_ForceIntoRT: 0
+  m_OcclusionCulling: 1
+  m_StereoConvergence: 10
+  m_StereoSeparation: 0.022
 --- !u!20 &20288700328077126
 Camera:
   m_ObjectHideFlags: 1
@@ -696,6 +735,17 @@ MonoBehaviour:
   m_SnapThreshold: 5
   m_InterpolateRotation: 1
   m_InterpolateMovement: 1
+--- !u!114 &114609034893806456
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1084937059493214}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8b6ec2bf711b4bf458d0594adef6ac24, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!114 &114668423187089610
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -728,6 +778,21 @@ MonoBehaviour:
     i15: 252
   m_ServerOnly: 0
   m_LocalPlayerAuthority: 1
+--- !u!114 &114764102769807744
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1084937059493214}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -768656878, guid: f70555f144d8491a825f0804e09c671c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_EventMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_MaxRayIntersections: 5
 --- !u!114 &114993385333409568
 MonoBehaviour:
   m_ObjectHideFlags: 1
