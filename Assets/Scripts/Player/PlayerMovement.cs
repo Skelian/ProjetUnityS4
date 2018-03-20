@@ -47,21 +47,21 @@ public class PlayerMovement : NetworkBehaviour {
 
 
 	void Deplacement(){
-		if (Input.GetKeyDown (ControlePerso.AVANCER))
+		if (Input.GetKey (ControlePerso.AVANCER))
 			mv = 1;
-		else if (Input.GetKeyDown (ControlePerso.ARRIERE))
+		else if (Input.GetKey (ControlePerso.ARRIERE))
 			mv = -1;
-		else
+		else if(!Input.GetKey (ControlePerso.AVANCER) && !Input.GetKey (ControlePerso.ARRIERE))
 			mv = 0;
 		
-		if (Input.GetKeyDown (ControlePerso.GAUCHE))
-			mh = 1;
-		else if (Input.GetKeyDown (ControlePerso.DROITE))
+		if (Input.GetKey (ControlePerso.GAUCHE))
 			mh = -1;
-		else
+		else if (Input.GetKey (ControlePerso.DROITE))
+			mh = 1;
+		else if(!Input.GetKey (ControlePerso.GAUCHE) && !Input.GetKey (ControlePerso.DROITE))
 			mh = 0;
 
-		if (Input.GetKeyDown (ControlePerso.COURIR))
+		if (Input.GetKey (ControlePerso.COURIR))
 			speed = tmpSpeed * 2;
 		else
 			speed = tmpSpeed;
