@@ -20,13 +20,16 @@
 
     // Update is called once per frame
     public bool Update () {
-        if ((Down.ID ==Block.AIR_BLOCK_ID) || (Down.ID == 201) || (Down.ID == 202) || (Down.ID == 203))
-                Down.ParentChunk.SetLocalBlock(200, Down.Position);
+        if ((Down.ID == Block.AIR_BLOCK_ID) || (Down.ID == 201) || (Down.ID == 202) || (Down.ID == 203))
+        {
+            Down.ParentChunk.SetLocalBlock(200, Down.Position);
+            return true;
+        }
         else
         {
-            if  ((Down.ID != 200) && (block.ID < 203))
+            if ((Down.ID != 200) && (block.ID < 203))
             {
-                
+
                 if (West.ID == Block.AIR_BLOCK_ID)
                 {
                     West.ParentChunk.SetLocalBlock(block.ID + 1, West.Position);
@@ -43,7 +46,7 @@
                 {
                     South.ParentChunk.SetLocalBlock(block.ID + 1, South.Position);
                 }
-                
+
             }
         }
 

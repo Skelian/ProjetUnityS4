@@ -67,39 +67,75 @@ public class World
         if (!Directory.Exists(SaveDir))
             Directory.CreateDirectory(SaveDir);
 
+        //GameObject.Find("Player").GetComponent<Transform>().position = playerPosition;
         Reload(EntityUtils.ToChunkPosition(playerPosition), false);
     }
 
+    public void Save(Vector3 playerPos)
+    {
+        SaveLoadedChunks();
+        using(StreamWriter writer = new StreamWriter(SaveDir + "dim.dat", false))
+        {
+            writer.Write(Seed);
+            writer.Write(playerPos.x);
+            writer.Write(playerPos.y);
+            writer.Write(playerPos.z);
+        }
+    }
 
     /// <summary>
     /// Chunks chargés en mémoire.
     /// </summary>
     public Dictionary<Position, Chunk> LoadedChunks = new Dictionary<Position, Chunk>();
-    public Queue<Position> chunksToLoad = new Queue<Position>();
+    public Queue<Chunk> ToInstantiate = new Queue<Chunk>();
+    public Dictionary<Position, Chunk> DisplayedChunks = new Dictionary<Position, Chunk>();
 
     /// <summary>
     /// Met à jour les chunks chargés.
     /// </summary>
     public void Update(Vector3 playerPosition)
     {
-        if(chunksToLoad.Count > 0)
+        Chunk loaded = AsyncChunkOp.GetLoadedChunk();
+        if ((loaded != null) && !LoadedChunks.ContainsKey(loaded.Position))
         {
-            Position pos = chunksToLoad.Dequeue();
-            LoadedChunks.Add(pos, GetChunkFromFile(pos));
+            LoadedChunks.Add(loaded.Position, loaded);
+
+            if(Position.DistanceBetween(loaded.Position, CenterChunkPosition).AllInfEqTo(LoadDistance))
+            {
+                DisplayedChunks.Add(loaded.Position, loaded);
+                loaded.Instantiate();
+            }
+        }
+
+        if(ToInstantiate.Count > 0)
+        {
+            Chunk chunk = ToInstantiate.Dequeue();
+            chunk.Instantiate();
         }
 
         Position playerChunkPosition = EntityUtils.ToChunkPosition(playerPosition);
         if (playerChunkPosition == CenterChunkPosition)
             return;
 
-        //delete chunks.
+        //unload chunks
         foreach(Chunk chunk in new List<Chunk>(LoadedChunks.Values))
+        {
+            if (Position.DistanceBetween(chunk.Position, playerChunkPosition).AnySupTo(loadDistance * 2))
+            {
+                DisplayedChunks.Remove(chunk.Position);
+                LoadedChunks.Remove(chunk.Position);
+                chunk.Destroy();
+                AsyncChunkOp.AddChunkToSaveList(this, chunk);
+            }
+        }
+
+        //hide chunks
+        foreach(Chunk chunk in new List<Chunk>(DisplayedChunks.Values))
         {
             if (Position.DistanceBetween(chunk.Position, playerChunkPosition).AnySupTo(loadDistance))
             {
-                LoadedChunks.Remove(chunk.Position);
-                Chunk.SaveChunk(SaveDir, chunk);
-                GameObject.Destroy(chunk.ChunkObject);
+                DisplayedChunks.Remove(chunk.Position);
+                chunk.Hide();
             }
         }
 
@@ -115,11 +151,24 @@ public class World
                 {
                     Position tmp = new Position(x, y, z);
 
-                    if (!IsChunkLoaded(tmp) && !chunksToLoad.Contains(tmp))
-                        chunksToLoad.Enqueue(tmp);
+                    if (!IsChunkLoaded(tmp))
+                    {
+                        AsyncChunkOp.AddChunkToLoadList(this, tmp);
+                    }
+                    else
+                    {
+                        if (!IsChunkDisplayed(tmp))
+                        {
+                            Chunk toDisplay = LoadedChunks[tmp];
+                            ToInstantiate.Enqueue(toDisplay);
+                            DisplayedChunks.Add(tmp, toDisplay);
+                        }
+                    }
                 }
             }
         }
+
+        CenterChunkPosition = playerChunkPosition;
     }
 
     /// <summary>
@@ -127,17 +176,19 @@ public class World
     /// </summary>
     public void Reload(Position centerChunkPosition, bool save = true)
     {
-        this.CenterChunkPosition = centerChunkPosition;
+        CenterChunkPosition = centerChunkPosition;
 
         if(save)
             SaveLoadedChunks();
 
+        AsyncChunkOp.ClearLoadingQueue();
+        AsyncChunkOp.ClearLoadedQueue();
         LoadedChunks.Clear();
 
-        foreach (Chunk chunk in LoadedChunks.Values)
+        foreach (Chunk chunk in DisplayedChunks.Values)
             GameObject.Destroy(chunk.ChunkObject);
 
-        chunksToLoad.Clear();
+        DisplayedChunks.Clear();
 
         Position start = centerChunkPosition.SubtractAll(loadDistance);
         Position end = centerChunkPosition.AddAll(loadDistance);
@@ -150,7 +201,18 @@ public class World
                 for (int z = start.Z; z <= end.Z; z++)
                 {
                     Position tmp = new Position(x, y, z);
-                    LoadedChunks.Add(tmp, GetChunkFromFile(tmp));
+
+                    if(Position.DistanceBetween(tmp, centerChunkPosition).AnySupTo(3))
+                    {
+                        AsyncChunkOp.AddChunkToLoadList(this, tmp);
+                    }
+                    else
+                    {
+                        Chunk chunk = GetChunkFromFile(tmp);
+                        LoadedChunks.Add(tmp, chunk);
+                        DisplayedChunks.Add(tmp, chunk);
+                        chunk.Instantiate();
+                    }
                 }
             }
         }
@@ -159,9 +221,14 @@ public class World
     /// <summary>
     /// Envoie True si le chunk à la position spécifiée est chargé en mémoire.
     /// </summary>
-    public bool IsChunkLoaded(Position ChunkPos)
+    public bool IsChunkLoaded(Position chunkPos)
     {
-        return LoadedChunks.ContainsKey(ChunkPos);
+        return LoadedChunks.ContainsKey(chunkPos);
+    }
+
+    public bool IsChunkDisplayed(Position chunkPos)
+    {
+        return DisplayedChunks.ContainsKey(chunkPos);
     }
 
     /// <summary>
@@ -174,7 +241,7 @@ public class World
 
     private Chunk GetChunkFromFile(Position chunkPos)
     {
-        return Chunk.LoadChunk(this, chunkPos, Seed);
+        return Chunk.LoadChunk(this, chunkPos);
     }
 
     /// <summary>
@@ -183,7 +250,7 @@ public class World
     public void SaveLoadedChunks()
     {
         foreach (Chunk chunk in LoadedChunks.Values)
-            Chunk.SaveChunk(SaveDir, chunk);
+            AsyncChunkOp.AddChunkToSaveList(this, chunk);
     }
 
 }

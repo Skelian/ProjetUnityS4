@@ -3,6 +3,9 @@
 
     public static System.Random rand = new System.Random();
 
+    /// <summary>
+    /// Inverse deux valeures.
+    /// </summary>
     public static void Swap<T>(ref T a, ref T b)
     {
         T tmp = a;

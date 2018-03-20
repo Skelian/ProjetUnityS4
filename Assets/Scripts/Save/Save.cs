@@ -7,7 +7,7 @@ public class Save
     /// <summary>
     /// Emplacement des sauvegardes du jeu.
     /// </summary>
-    public static string SavesPath = "saves/";
+    public const string SavesPath = "saves/";
 
     /// <summary>
     /// Nom de la sauvegarde.
@@ -28,7 +28,15 @@ public class Save
             Directory.CreateDirectory(SaveDir);
     }
 
-    public World GetWorld(int dimensionID, int seed, Vector3 playerPosition)
+    public World LoadWorld(int dimensionID)
+    {
+        string[] lines = File.ReadAllLines(GetWorldDir(dimensionID) + "dim.dat");
+        Vector3 playerPosition = new Vector3(Convert.ToInt32(lines[1]), Convert.ToInt32(lines[2]), Convert.ToInt32(lines[3]));
+
+        return new World(this, dimensionID, Settings.loadDistance, playerPosition, Convert.ToInt32(lines[0]));
+    }
+
+    public World CreateWorld(int dimensionID, int seed, Vector3 playerPosition)
     {
         string path = GetWorldDir(dimensionID);
         if (!Directory.Exists(path))
