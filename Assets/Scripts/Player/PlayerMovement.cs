@@ -13,6 +13,7 @@ public class PlayerMovement : NetworkBehaviour {
 	private Animator ator;
 	private Rigidbody rb;
 	private float currenthealth;
+	private float tmpSpeed;
 
 	[SerializeField] public bool auSol;
 
@@ -25,6 +26,7 @@ public class PlayerMovement : NetworkBehaviour {
 		//Contrainte de rotation en X, Z activée
 		rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
 		jump = new Vector3 (0f, 1.5f, 0f);
+		tmpSpeed = speed;
 	}
 	
 	// Update is called once per frame
@@ -45,8 +47,24 @@ public class PlayerMovement : NetworkBehaviour {
 
 
 	void Deplacement(){
-		mv = Input.GetAxis ("Vertical");
-		mh = Input.GetAxis ("Horizontal");
+		if (Input.GetKeyDown (ControlePerso.AVANCER))
+			mv = 1;
+		else if (Input.GetKeyDown (ControlePerso.ARRIERE))
+			mv = -1;
+		else
+			mv = 0;
+		
+		if (Input.GetKeyDown (ControlePerso.GAUCHE))
+			mh = 1;
+		else if (Input.GetKeyDown (ControlePerso.DROITE))
+			mh = -1;
+		else
+			mh = 0;
+
+		if (Input.GetKeyDown (ControlePerso.COURIR))
+			speed = tmpSpeed * 2;
+		else
+			speed = tmpSpeed;
 
 		if (mv != 0) {
 			transform.Translate (mv * transform.forward * speed, Space.World);
@@ -61,7 +79,7 @@ public class PlayerMovement : NetworkBehaviour {
 	}
 
 	void Saut(){
-		if (Input.GetAxis ("Jump") > 0 && auSol) {
+		if (Input.GetKeyDown(ControlePerso.SAUTER) && auSol) {
 			rb.AddForce (new Vector3 (0, jumpForce, 0), ForceMode.Impulse);
 			//Le joueur n'est donc plus sur le sol
 			auSol = false;
