@@ -17,7 +17,7 @@ public class GrabRaycast : MonoBehaviour {
 
     void Update() {
 
-        if (Physics.Raycast(GetComponent<GameObject>().transform.parent.position, Vector3.right, out vision, 5.0f))
+        if (Physics.Raycast(GetComponent<GameObject>().transform.parent.position, Vector3.forward, out vision, 5.0f))
         {
             // Joueur à portée de combat ou bloc à portée de minage : on garde l'objet en mémoire
             if (((vision.collider.tag == "Player") && (vision.distance <= 2)) || ((vision.collider.tag == "Block") && (vision.distance <= 3)))
