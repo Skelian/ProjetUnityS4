@@ -1,6 +1,7 @@
 ﻿using Simplex;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using UnityEngine;
 
 public class Chunk
@@ -85,12 +86,12 @@ public class Chunk
 
     public void Update()
     {
-        bool updated = false;
+        int updates = 0;
 
-        foreach (Fluid fluid in fluids)
-            updated = (updated || fluid.Update());
+        foreach (Fluid fluid in fluids.ToList())
+            updates += fluid.Update();
 
-        if(updated)
+        if(updates > 0)
             RecalculateMesh();
     }
 
@@ -146,11 +147,11 @@ public class Chunk
         List<Vector2> uvs = new List<Vector2>();
         List<int> tris = new List<int>();
 
-        for (int x = 0; x < Chunk.CHUNK_SIZE; x++)
+        for (int x = 0; x < CHUNK_SIZE; x++)
         {
-            for (int y = 0; y < Chunk.CHUNK_SIZE; y++)
+            for (int y = 0; y < CHUNK_SIZE; y++)
             {
-                for (int z = 0; z < Chunk.CHUNK_SIZE; z++)
+                for (int z = 0; z < CHUNK_SIZE; z++)
                 {
                     Block block = Blocks[x, y, z];
 
@@ -160,7 +161,7 @@ public class Chunk
 
                     // haut
                     if (IsBlockTransparent(x, y + 1, z) || IsBlockScaled(x, y + 1, z))
-                        BuildFace(block.Definition, new Vector3(x, y + 1, z), Vector3.forward, Vector3.right, true, verts, uvs, tris);
+                        BuildFace(block.Definition, new Vector3(x, y + 1 * block.Definition.Scale, z), Vector3.forward, Vector3.right, true, verts, uvs, tris);
 
                     // bas
                     if (IsBlockTransparent(x, y - 1, z) || IsBlockScaled(x, y - 1, z))
@@ -265,19 +266,15 @@ public class Chunk
     }
 
     /// <summary>
-    /// Retourne le block présent aux coordonées globales (si présent dans ce chunk).
-    /// </summary>
-    public Block GetBlock(Position blockPos)
-    {
-        return IsPresentInChunk(blockPos) ? Blocks[blockPos.X % CHUNK_SIZE, blockPos.Y % CHUNK_SIZE, blockPos.Z % CHUNK_SIZE] : null;
-    }
-
-    /// <summary>
     /// Retourne le bloc présent aux coordonées locales indiquées (0 à 15).
     /// </summary>
-    public Block GetLocalBlock(int localXPos, int localYpos, int localZpos)
+    public Block GetLocalBlock(Position localBlockPos)
     {
-        return (IsValid(localXPos, localYpos, localZpos) ? Blocks[localXPos, localYpos, localZpos] : null);
+        return (IsValid(localBlockPos) ? Blocks[localBlockPos.X, localBlockPos.Y, localBlockPos.Z] : null);
+    }
+
+    private void RemoveFluid(Block b) {
+        fluids.RemoveAll(x => x.block == b);
     }
 
     /// <summary>
@@ -292,7 +289,15 @@ public class Chunk
         if (definition == null)
             return false;
 
-        Blocks[localBlockPos.X, localBlockPos.Y, localBlockPos.Z].Definition = definition;
+        Block block = Blocks[localBlockPos.X, localBlockPos.Y, localBlockPos.Z];
+
+        if (block.Definition.BlockType == BlockDef.TYPE_FLUID)
+            RemoveFluid(block);
+
+        block.Definition = definition;
+
+        if (definition.BlockType == BlockDef.TYPE_FLUID)
+            fluids.Add(new Fluid(block));
 
         altered = true;
         RecalculateMesh();
@@ -315,10 +320,21 @@ public class Chunk
         Position.Smooth(first, second);
 
         for (int x = first.X; x <= second.X; x++)
+        {
             for (int y = first.Y; y <= second.Y; y++)
+            {
                 for (int z = first.Z; z <= second.Z; z++)
-                    Blocks[x, y, z].Definition = newDef;
+                {
+                    Block block = Blocks[x, y, z];
+                    if (block.Definition.BlockType == BlockDef.TYPE_FLUID)
+                        RemoveFluid(block);
 
+                    block.Definition = newDef;
+                    if (newDef.BlockType == BlockDef.TYPE_FLUID)
+                        fluids.Add(new Fluid(block));
+                }
+            }
+        }
 
         altered = true;
         RecalculateMesh();
@@ -470,6 +486,12 @@ public class Chunk
                 for (z = 0; z < CHUNK_SIZE; z++)
                     chunk.Blocks[x, y, z] = new Block(definition, globalChunkPos.Add(x, y, z), chunk);
 
+        if (definition.BlockType == BlockDef.TYPE_FLUID)
+            for (x = 0; x < CHUNK_SIZE; x++)
+                for (y = 0; y < CHUNK_SIZE; y++)
+                    for (z = 0; z < CHUNK_SIZE; z++)
+                        chunk.fluids.Add(new Fluid(chunk.Blocks[x, y, z]));
+
         return chunk;
     }
 
@@ -501,7 +523,6 @@ public class Chunk
                     chunk.Blocks[x, y, z] = new Block(BlockDefManager.GetBlockDef(value > 0.3f ? value < 0.7f ? 1 : 2 : 102), globalChunkPos.Add(x, y, z), chunk);
                 }
 
-        chunk.RecalculateMesh();
         return chunk;
     }
 
@@ -517,7 +538,12 @@ public class Chunk
 
         SetBlockOreGen(chunk);
 
-        chunk.RecalculateMesh();
+        for (int x = 0; x < CHUNK_SIZE; x++)
+            for (int y = 0; y < CHUNK_SIZE; y++)
+                for (int z = 0; z < CHUNK_SIZE; z++)
+                    if (chunk.Blocks[x, y, z].Definition.BlockType == BlockDef.TYPE_FLUID)
+                        chunk.fluids.Add(new Fluid(chunk.Blocks[x, y, z]));
+
         return chunk;
     }
 

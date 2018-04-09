@@ -1,4 +1,6 @@
-﻿public class Block
+﻿using UnityEngine;
+
+public class Block
 {
     public static int AIR_BLOCK_ID = 0;
 
@@ -21,11 +23,16 @@
         Position = globalPosition;
     }
 
+    public Position LocalPosition()
+    {
+        return new Position(Position.X % Chunk.CHUNK_SIZE, Position.Y % Chunk.CHUNK_SIZE, Position.Z % Chunk.CHUNK_SIZE);
+    }
+
     public Block GetNearBlock(Utils.Face face)
     {
         Position pos = Position.NearPosition(face);
         Chunk chunk = ParentChunk.World.GetChunk(EntityUtils.ToChunkPosition(pos));
-        return (chunk != null ? chunk.GetBlock(pos) : null);
+        return (chunk != null ? chunk.GetLocalBlock(EntityUtils.ToLocalChunkPosition(pos)) : null);
     }
 
 }

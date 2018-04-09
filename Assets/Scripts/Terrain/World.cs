@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 
@@ -55,7 +56,6 @@ public class World
 
     public World(Save save, int dimensionID, int loadDistance, Vector3 playerPosition, int seed)
     {
-        Random.InitState(seed);
         Simplex.Noise.Seed = seed;
 
         this.ParentSave = save;
@@ -90,12 +90,14 @@ public class World
     public Queue<Chunk> ToInstantiate = new Queue<Chunk>();
     public Dictionary<Position, Chunk> DisplayedChunks = new Dictionary<Position, Chunk>();
 
+    long LastChunkUpdate = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
+
     /// <summary>
     /// Met à jour les chunks chargés.
     /// </summary>
     public void Update(Vector3 playerPosition)
     {
-        Chunk loaded = AsyncChunkOp.GetLoadedChunk();
+        Chunk loaded = AsyncChunkOps.GetLoadedChunk();
         if ((loaded != null) && !LoadedChunks.ContainsKey(loaded.Position))
         {
             LoadedChunks.Add(loaded.Position, loaded);
@@ -113,6 +115,14 @@ public class World
             chunk.Instantiate();
         }
 
+        long now = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
+        if (now - LastChunkUpdate > 1000)
+        {
+            LastChunkUpdate = now;
+            foreach (Chunk chunk in LoadedChunks.Values)
+                chunk.Update();
+        }
+
         Position playerChunkPosition = EntityUtils.ToChunkPosition(playerPosition);
         if (playerChunkPosition == CenterChunkPosition)
             return;
@@ -125,7 +135,7 @@ public class World
                 DisplayedChunks.Remove(chunk.Position);
                 LoadedChunks.Remove(chunk.Position);
                 chunk.Destroy();
-                AsyncChunkOp.AddChunkToSaveList(this, chunk);
+                AsyncChunkOps.AddChunkToSaveList(this, chunk);
             }
         }
 
@@ -153,7 +163,7 @@ public class World
 
                     if (!IsChunkLoaded(tmp))
                     {
-                        AsyncChunkOp.AddChunkToLoadList(this, tmp);
+                        AsyncChunkOps.AddChunkToLoadList(this, tmp);
                     }
                     else
                     {
@@ -181,8 +191,8 @@ public class World
         if(save)
             SaveLoadedChunks();
 
-        AsyncChunkOp.ClearLoadingQueue();
-        AsyncChunkOp.ClearLoadedQueue();
+        AsyncChunkOps.ClearLoadingQueue();
+        AsyncChunkOps.ClearLoadedQueue();
         LoadedChunks.Clear();
 
         foreach (Chunk chunk in DisplayedChunks.Values)
@@ -204,7 +214,7 @@ public class World
 
                     if(Position.DistanceBetween(tmp, centerChunkPosition).AnySupTo(3))
                     {
-                        AsyncChunkOp.AddChunkToLoadList(this, tmp);
+                        AsyncChunkOps.AddChunkToLoadList(this, tmp);
                     }
                     else
                     {
@@ -231,6 +241,12 @@ public class World
         return DisplayedChunks.ContainsKey(chunkPos);
     }
 
+    public Block GetBlock(Position blockPos)
+    {
+        Chunk chunk = GetChunk(EntityUtils.ToChunkPosition(blockPos));
+        return (chunk != null ? chunk.GetLocalBlock(EntityUtils.ToLocalChunkPosition(blockPos)) : null);
+    }
+
     /// <summary>
     /// Retourne le chunk présent aux coordonées indiquées.
     /// </summary>
@@ -250,7 +266,7 @@ public class World
     public void SaveLoadedChunks()
     {
         foreach (Chunk chunk in LoadedChunks.Values)
-            AsyncChunkOp.AddChunkToSaveList(this, chunk);
+            AsyncChunkOps.AddChunkToSaveList(this, chunk);
     }
 
 }

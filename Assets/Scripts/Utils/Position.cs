@@ -216,9 +216,9 @@ public class Position
         return new Position(second.x - first.x, second.y - first.y, second.z - first.z);
     }
 
-    public static Position Vec3ToPos(Vector3 vec)
+    public static Position FromVec3(Vector3 vec)
     {
-        return new Position(Convert.ToInt32(vec.x), Convert.ToInt32(vec.y), Convert.ToInt32(vec.z));
+        return new Position(Mathf.FloorToInt(vec.x), Mathf.FloorToInt(vec.y), Mathf.FloorToInt(vec.z));
     }
 
     public Vector3 ToVec3()

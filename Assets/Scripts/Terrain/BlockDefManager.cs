@@ -22,43 +22,43 @@ public class BlockDefManager
     public static void InitBlockDefinitions()
     {
         // les ids des blocs classiques commencent à 0
-        AddBlockDef(new BlockDef.BlockDefBuilder(Block.AIR_BLOCK_ID, "air", 0)
+        AddBlockDef(new BlockDef.Builder(Block.AIR_BLOCK_ID, "air", 0)
             .SetTransparent(true)
             .Build());
 
-        AddBlockDef(new BlockDef.BlockDefBuilder(1, "martian_stone", 2).Build());
-        AddBlockDef(new BlockDef.BlockDefBuilder(2, "moon_stone", 2).Build());
-        AddBlockDef(new BlockDef.BlockDefBuilder(3, "O2_block", 0).Build()); //resistance = 0 : se casse en un seul coup
-        AddBlockDef(new BlockDef.BlockDefBuilder(4, "sand", 3)
+        AddBlockDef(new BlockDef.Builder(1, "martian_stone", 2).Build());
+        AddBlockDef(new BlockDef.Builder(2, "moon_stone", 2).Build());
+        AddBlockDef(new BlockDef.Builder(3, "O2_block", 0).Build()); //resistance = 0 : se casse en un seul coup
+        AddBlockDef(new BlockDef.Builder(4, "sand", 3)
             .SetGravity(true) //le sable est soumis à la gravitée
             .Build());
 
         //les ids des minéraux commencent à 100
-        AddBlockDef(new BlockDef.BlockDefBuilder(100, "iron_ore", 3, BlockDef.TYPE_ORE).Build());
-        AddBlockDef(new BlockDef.BlockDefBuilder(101, "titanium_ore", 4, BlockDef.TYPE_ORE).Build());
-        AddBlockDef(new BlockDef.BlockDefBuilder(102, "uranium_ore", 4, BlockDef.TYPE_ORE).Build());
-        AddBlockDef(new BlockDef.BlockDefBuilder(103, "oil_ore", 3, BlockDef.TYPE_ORE).Build());
-        AddBlockDef(new BlockDef.BlockDefBuilder(104, "lead_ore", 3, BlockDef.TYPE_ORE).Build());
+        AddBlockDef(new BlockDef.Builder(100, "iron_ore", 3, BlockDef.TYPE_ORE).Build());
+        AddBlockDef(new BlockDef.Builder(101, "titanium_ore", 4, BlockDef.TYPE_ORE).Build());
+        AddBlockDef(new BlockDef.Builder(102, "uranium_ore", 4, BlockDef.TYPE_ORE).Build());
+        AddBlockDef(new BlockDef.Builder(103, "oil_ore", 3, BlockDef.TYPE_ORE).Build());
+        AddBlockDef(new BlockDef.Builder(104, "lead_ore", 3, BlockDef.TYPE_ORE).Build());
 
         //les ids des blocs techniques commencent à 200
-        AddBlockDef(new BlockDef.BlockDefBuilder(200, "lava", 3, BlockDef.TYPE_FLUID)
+        AddBlockDef(new BlockDef.Builder(200, "lava", 3, BlockDef.TYPE_FLUID)
             .SetDestructible(false)
             .SetDamageOnContact(6) //6pv de dégat par 0.5 seconde au contact de la lave
             .Build());
 
-        AddBlockDef(new BlockDef.BlockDefBuilder(201, "lava", 3, BlockDef.TYPE_FLUID)
+        AddBlockDef(new BlockDef.Builder(201, "lava", 3, BlockDef.TYPE_FLUID)
             .SetDestructible(false)
             .SetScale(0.75f)
             .SetDamageOnContact(6)
             .Build());
 
-        AddBlockDef(new BlockDef.BlockDefBuilder(202, "lava", 3, BlockDef.TYPE_FLUID)
+        AddBlockDef(new BlockDef.Builder(202, "lava", 3, BlockDef.TYPE_FLUID)
             .SetDestructible(false)
-            .SetScale(0.75f)
+            .SetScale(0.50f)
             .SetDamageOnContact(6)
             .Build());
 
-        AddBlockDef(new BlockDef.BlockDefBuilder(203, "lava", 3, BlockDef.TYPE_FLUID)
+        AddBlockDef(new BlockDef.Builder(203, "lava", 3, BlockDef.TYPE_FLUID)
             .SetDestructible(false)
             .SetScale(0.25f)
             .SetDamageOnContact(6)

@@ -1,7 +1,6 @@
-﻿using System.Collections.Concurrent;
-using System.Threading;
+﻿using System.Threading;
 
-public class AsyncChunkOp
+public class AsyncChunkOps
 {
     private struct LoadingChunk
     {

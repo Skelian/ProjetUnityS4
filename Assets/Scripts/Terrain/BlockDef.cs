@@ -66,14 +66,14 @@ public class BlockDef
         Scale = scale;
     }
 
-    public class BlockDefBuilder
+    public class Builder
     {
         private string blockName;
         private int id, resistance, damageOnContact = 0, blockType;
         private bool gravity = false, transparent = false, destructible = true;
         private float scale = 1;
 
-        public BlockDefBuilder(int id, string blockName, int resistance, int blockType = TYPE_CLASSIC)
+        public Builder(int id, string blockName, int resistance, int blockType = TYPE_CLASSIC)
         {
             this.id = id;
             this.blockName = blockName;
@@ -81,31 +81,31 @@ public class BlockDef
             this.blockType = blockType;
         }
 
-        public BlockDefBuilder SetGravity(bool gravity)
+        public Builder SetGravity(bool gravity)
         {
             this.gravity = gravity;
             return this;
         }
 
-        public BlockDefBuilder SetDestructible(bool destructible)
+        public Builder SetDestructible(bool destructible)
         {
             this.destructible = destructible;
             return this;
         }
 
-        public BlockDefBuilder SetTransparent(bool transparent)
+        public Builder SetTransparent(bool transparent)
         {
             this.transparent = transparent;
             return this;
         }
 
-        public BlockDefBuilder SetDamageOnContact(int damageOnContact)
+        public Builder SetDamageOnContact(int damageOnContact)
         {
             this.damageOnContact = damageOnContact;
             return this;
         }
 
-        public BlockDefBuilder SetScale(float scale)
+        public Builder SetScale(float scale)
         {
             this.scale = scale;
             return this;

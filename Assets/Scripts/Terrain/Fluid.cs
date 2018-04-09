@@ -1,4 +1,7 @@
-﻿public class Fluid  {
+﻿using UnityEngine;
+
+public class Fluid
+{
 
     public Block block;
     private Block West;
@@ -19,37 +22,41 @@
     }
 
     // Update is called once per frame
-    public bool Update () {
+    public int Update()
+    {
         if ((Down.ID == Block.AIR_BLOCK_ID) || (Down.ID == 201) || (Down.ID == 202) || (Down.ID == 203))
         {
-            Down.ParentChunk.SetLocalBlock(200, Down.Position);
-            return true;
+            Down.ParentChunk.SetLocalBlock(200, Down.LocalPosition());
+            return 1;
         }
-        else
+        else if ((Down.ID != 200) && (block.ID < 203))
         {
-            if ((Down.ID != 200) && (block.ID < 203))
+            int updates = 0;
+
+            if (West.ID == Block.AIR_BLOCK_ID)
             {
-
-                if (West.ID == Block.AIR_BLOCK_ID)
-                {
-                    West.ParentChunk.SetLocalBlock(block.ID + 1, West.Position);
-                }
-                if (East.ID == Block.AIR_BLOCK_ID)
-                {
-                    East.ParentChunk.SetLocalBlock(block.ID + 1, East.Position);
-                }
-                if (North.ID == Block.AIR_BLOCK_ID)
-                {
-                    North.ParentChunk.SetLocalBlock(block.ID + 1, North.Position);
-                }
-                if (South.ID == Block.AIR_BLOCK_ID)
-                {
-                    South.ParentChunk.SetLocalBlock(block.ID + 1, South.Position);
-                }
-
+                West.ParentChunk.SetLocalBlock(block.ID + 1, West.LocalPosition());
+                ++updates;
             }
+            if (East.ID == Block.AIR_BLOCK_ID)
+            {
+                East.ParentChunk.SetLocalBlock(block.ID + 1, East.LocalPosition());
+                ++updates;
+            }
+            if (North.ID == Block.AIR_BLOCK_ID)
+            {
+                North.ParentChunk.SetLocalBlock(block.ID + 1, North.LocalPosition());
+                ++updates;
+            }
+            if (South.ID == Block.AIR_BLOCK_ID)
+            {
+                South.ParentChunk.SetLocalBlock(block.ID + 1, South.LocalPosition());
+                ++updates;
+            }
+
+            return updates;
         }
 
-        return false;
+        return 0;
     }
 }
