@@ -33,6 +33,8 @@ public class BlockDefManager
             .SetGravity(true) //le sable est soumis à la gravitée
             .Build());
 
+        AddBlockDef(new BlockDef.Builder(5, "lunazite", 10).Build());
+
         //les ids des minéraux commencent à 100
         AddBlockDef(new BlockDef.Builder(100, "iron_ore", 3, BlockDef.TYPE_ORE).Build());
         AddBlockDef(new BlockDef.Builder(101, "titanium_ore", 4, BlockDef.TYPE_ORE).Build());
