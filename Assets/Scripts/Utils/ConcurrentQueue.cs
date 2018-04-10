@@ -33,6 +33,7 @@ internal class ConcurrentQueue<T>
     private volatile Segment _head;
     private volatile Segment _tail;
     private const int SEGMENT_SIZE = 32;
+    private const int WAIT_DELAY_MS = 5;
     //number of snapshot takers, GetEnumerator(), ToList() and ToArray() operations take snapshot.
     internal volatile int _numSnapshotTakers = 0;
 
@@ -188,13 +189,12 @@ internal class ConcurrentQueue<T>
             //current head is empty and it is NOT the last segment,
             //it means another thread is growing new segment 
             {
-                SpinWait spin = new SpinWait();
                 while (head.IsEmpty)
                 {
                     if (head.Next == null)
                         return true;
 
-                    spin.SpinOnce();
+                    Thread.Sleep(WAIT_DELAY_MS);
                     head = _head;
                 }
                 return false;
@@ -272,7 +272,6 @@ internal class ConcurrentQueue<T>
         tail = _tail;
         headLow = head.Low;
         tailHigh = tail.High;
-        SpinWait spin = new SpinWait();
 
         //we loop until the observed values are stable and sensible.  
         //This ensures that any update order by other methods can be tolerated.
@@ -284,7 +283,7 @@ internal class ConcurrentQueue<T>
             //if head jumps ahead of tail because of concurrent grow and dequeue, retry
             || head._index > tail._index)
         {
-            spin.SpinOnce();
+            Thread.Sleep(WAIT_DELAY_MS);
             head = _head;
             tail = _tail;
             headLow = head.Low;
@@ -409,7 +408,6 @@ internal class ConcurrentQueue<T>
     {
         try
         {
-            SpinWait spin = new SpinWait();
 
             if (head == tail)
             {
@@ -417,10 +415,9 @@ internal class ConcurrentQueue<T>
                 {
                     // If the position is reserved by an Enqueue operation, but the value is not written into,
                     // spin until the value is available.
-                    spin.Reset();
                     while (!head._state[i]._value)
                     {
-                        spin.SpinOnce();
+                        Thread.Sleep(WAIT_DELAY_MS);
                     }
                     yield return head._array[i];
                 }
@@ -432,10 +429,9 @@ internal class ConcurrentQueue<T>
                 {
                     // If the position is reserved by an Enqueue operation, but the value is not written into,
                     // spin until the value is available.
-                    spin.Reset();
                     while (!head._state[i]._value)
                     {
-                        spin.SpinOnce();
+                        Thread.Sleep(WAIT_DELAY_MS);
                     }
                     yield return head._array[i];
                 }
@@ -447,10 +443,9 @@ internal class ConcurrentQueue<T>
                     {
                         // If the position is reserved by an Enqueue operation, but the value is not written into,
                         // spin until the value is available.
-                        spin.Reset();
                         while (!curr._state[i]._value)
                         {
-                            spin.SpinOnce();
+                            Thread.Sleep(WAIT_DELAY_MS);
                         }
                         yield return curr._array[i];
                     }
@@ -462,10 +457,9 @@ internal class ConcurrentQueue<T>
                 {
                     // If the position is reserved by an Enqueue operation, but the value is not written into,
                     // spin until the value is available.
-                    spin.Reset();
                     while (!tail._state[i]._value)
                     {
-                        spin.SpinOnce();
+                        Thread.Sleep(WAIT_DELAY_MS);
                     }
                     yield return tail._array[i];
                 }
@@ -487,13 +481,12 @@ internal class ConcurrentQueue<T>
     /// </param>
     public void Enqueue(T item)
     {
-        SpinWait spin = new SpinWait();
         while (true)
         {
             Segment tail = _tail;
             if (tail.TryAppend(item))
                 return;
-            spin.SpinOnce();
+            Thread.Sleep(WAIT_DELAY_MS);
         }
     }
 
@@ -732,7 +725,6 @@ internal class ConcurrentQueue<T>
         /// <returns>return false only if the current segment is empty</returns>
         internal bool TryRemove(out T result)
         {
-            SpinWait spin = new SpinWait();
             int lowLocal = Low, highLocal = High;
             while (lowLocal <= highLocal)
             {
@@ -741,10 +733,9 @@ internal class ConcurrentQueue<T>
                 {
                     //if the specified value is not available (this spot is taken by a push operation,
                     // but the value is not written into yet), then spin
-                    SpinWait spinLocal = new SpinWait();
                     while (!_state[lowLocal]._value)
                     {
-                        spinLocal.SpinOnce();
+                        Thread.Sleep(WAIT_DELAY_MS);
                     }
                     result = _array[lowLocal];
 
@@ -767,10 +758,9 @@ internal class ConcurrentQueue<T>
                         //while the *current* thread is doing *this* Dequeue operation, and finds that it needs to 
                         //dispose the current (and ONLY) segment. Then we need to wait till thread A finishes its 
                         //Grow operation, this is the reason of having the following while loop
-                        spinLocal = new SpinWait();
                         while (_next == null)
                         {
-                            spinLocal.SpinOnce();
+                            Thread.Sleep(WAIT_DELAY_MS);
                         }
                         Debug.Assert(_source._head == this);
                         _source._head = _next;
@@ -780,7 +770,7 @@ internal class ConcurrentQueue<T>
                 else
                 {
                     //CAS failed due to contention: spin briefly and retry
-                    spin.SpinOnce();
+                    Thread.Sleep(WAIT_DELAY_MS);
                     lowLocal = Low; highLocal = High;
                 }
             }//end of while
@@ -800,10 +790,10 @@ internal class ConcurrentQueue<T>
             int lowLocal = Low;
             if (lowLocal > High)
                 return false;
-            SpinWait spin = new SpinWait();
+
             while (!_state[lowLocal]._value)
             {
-                spin.SpinOnce();
+                Thread.Sleep(WAIT_DELAY_MS);
             }
             result = _array[lowLocal];
             return true;
@@ -819,10 +809,9 @@ internal class ConcurrentQueue<T>
         {
             for (int i = start; i <= end; i++)
             {
-                SpinWait spin = new SpinWait();
                 while (!_state[i]._value)
                 {
-                    spin.SpinOnce();
+                    Thread.Sleep(WAIT_DELAY_MS);
                 }
                 list.Add(_array[i]);
             }
