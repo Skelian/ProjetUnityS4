@@ -10,12 +10,20 @@ public class OffsetFlashlight : MonoBehaviour {
 
     [SerializeField] private Light flashlight;
 
+    private bool lighted = false;
+
+    [SerializeField] private AudioClip FlashlightSound;
+
+    private AudioSource AudioSource;
+
     void Start()
     {
         flashlight.enabled = false;
 
         goFollow = Camera.main.gameObject;
         vectOffset = transform.position - goFollow.transform.position;
+
+        AudioSource = GetComponent<AudioSource>();
     }
 
     void Update()
@@ -23,12 +31,26 @@ public class OffsetFlashlight : MonoBehaviour {
         transform.position = goFollow.transform.position + vectOffset;
         transform.rotation = Quaternion.Slerp(transform.rotation, goFollow.transform.rotation, speed * Time.deltaTime);
 
-        if (Input.GetButtonDown("Fire3"))
+        if (Input.GetKeyDown(KeyCode.T))
+        {
+            FlashlightOnOff();
+        }
+    }
+
+    public void FlashlightOnOff()
+    {
+        lighted = !lighted;
+
+        if(lighted == false)
         {
             flashlight.enabled = true;
-        } else if (Input.GetButtonUp("Fire3"))
+        }
+        if (lighted == true)
         {
             flashlight.enabled = false;
         }
+        
+        AudioSource.clip = FlashlightSound;
+        AudioSource.Play();
     }
 }

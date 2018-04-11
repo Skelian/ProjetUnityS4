@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class TimeController : MonoBehaviour {
-
+public class TimeController : MonoBehaviour
+{
     [SerializeField] private Light sun;
     [SerializeField] private float secondsInFullDay = 120f;
 
@@ -13,9 +13,11 @@ public class TimeController : MonoBehaviour {
 
     private float adjustment = 1f;
 
+
     private void Start()
     {
         sunInitialIntensity = sun.intensity;
+
     }
 
     private void Update()
@@ -24,13 +26,12 @@ public class TimeController : MonoBehaviour {
 
         currentTimeOfDay += (Time.deltaTime / secondsInFullDay) * timeMultiplier;
 
-        if(currentTimeOfDay >= 1)
+        if (currentTimeOfDay >= 1)
         {
             currentTimeOfDay = 0;
         }
 
         RenderSettings.skybox.SetFloat("_Rotation", Time.time * adjustment);
-
     }
 
     void UpdateSun()
@@ -44,17 +45,16 @@ public class TimeController : MonoBehaviour {
             intensityMultiplier = 0;
         }
 
-        else if(currentTimeOfDay <= 0.25f)
+        else if (currentTimeOfDay <= 0.25f)
         {
             intensityMultiplier = Mathf.Clamp01((currentTimeOfDay - 0.23f) * (1 / 0.02f));
         }
 
-        else if(currentTimeOfDay >= 0.73f)
+        else if (currentTimeOfDay >= 0.73f)
         {
             intensityMultiplier = Mathf.Clamp01(1 - ((currentTimeOfDay - 0.73f) * (1 / 0.02f)));
         }
 
         sun.intensity = sunInitialIntensity + intensityMultiplier;
     }
-
 }

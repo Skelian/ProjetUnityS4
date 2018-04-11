@@ -8,14 +8,20 @@ public class PlayerMovementSolo : MonoBehaviour {
 	public float speed, jumpForce;
 	[SerializeField] private GameObject tete;
 
-
 	private float mh, mv;
 	private Vector3 jump;
 	private Animator ator;
 	private Rigidbody rb;
 	private float currenthealth;
 
-	[SerializeField] public bool auSol;
+    [SerializeField] public bool auSol, enMarche;
+
+    //Sons
+    [SerializeField] private AudioClip FootstepsSound;
+    [SerializeField] private AudioClip JumpSound;
+    [SerializeField] private AudioClip JumpPlayerSound;
+
+    private AudioSource AudioSource;
 
 	// Use .this for initialization
 	void Start () {
@@ -26,6 +32,8 @@ public class PlayerMovementSolo : MonoBehaviour {
 		//Contrainte de rotation en X, Z activée
 		rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
 		jump = new Vector3 (0f, 1.5f, 0f);
+        enMarche = false;
+        AudioSource = GetComponent<AudioSource>();
 	}
 
 	// Update is called once per frame
@@ -46,34 +54,66 @@ public class PlayerMovementSolo : MonoBehaviour {
 	}
 
 
-	void Deplacement(){		
+	void Deplacement()
+    {
+        mv = Input.GetAxis("Vertical");
+        mh = Input.GetAxis("Horizontal");
 
-                mv = Input.GetAxis("Vertical");
-                mh = Input.GetAxis("Horizontal");
+        if (mv != 0)
+        {
+            transform.Translate(mv * transform.forward * speed, Space.World);
+            ator.SetBool("walking", true);
+            PlayFootstepsSound();
+        }
+        else
+        {
+            ator.SetBool("walking", false);
 
-                if (mv != 0)
-                {
-                    transform.Translate(mv * transform.forward * speed, Space.World);
-                    ator.SetBool("walking", true);
-                }
-                else
-                {
-                    ator.SetBool("walking", false);
-                }
-                if (mh != 0)
-                {
-                    transform.Translate(mh * transform.right * speed, Space.World);
-                    ator.SetBool("walking", true);
-                }
+        }
+        if (mh != 0)
+        {
+            transform.Translate(mh * transform.right * speed, Space.World);
+            ator.SetBool("walking", true);
+            PlayFootstepsSound();
+        }
 	}
 
-	void Saut(){
-			if (Input.GetAxis ("Jump") > 0 && auSol) {
-				rb.AddForce (new Vector3 (0, jumpForce, 0), ForceMode.Impulse);
-				//Le joueur n'est donc plus sur le sol
-				auSol = false;
-			}
+	void Saut()
+    {
+	    if (Input.GetAxis ("Jump") > 0 && auSol)
+        {
+			rb.AddForce (new Vector3 (0, jumpForce, 0), ForceMode.Impulse);
+			//Le joueur n'est donc plus sur le sol
+			auSol = false;
+            PlayJumpSound();
+            PlayJumpPlayerSound();
+        }
 	}
+
+    void PlayFootstepsSound()
+    {
+        if (auSol == false)
+        {
+            return;
+        }
+        else
+        {
+                AudioSource.clip = FootstepsSound;
+                AudioSource.PlayDelayed(0.1f);
+        }
+    }
+
+    private void PlayJumpSound()
+    {
+        AudioSource.clip = JumpSound;
+        AudioSource.Play();
+    }
+
+    private void PlayJumpPlayerSound()
+    {
+        AudioSource.clip = JumpPlayerSound;
+        AudioSource.Play();
+    }
 
 	void RotateCameraX(){
 		if (!GestionMenu.InvStats)
